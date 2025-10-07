@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Michroma&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -6,6 +5,24 @@
   --foreground: #171717;
   --light: #edf1e8;
   --dark: #101010;
+}
+
+@font-face {
+  font-family: crushed;
+  src: url(../public/Crushed/Crushed-Regular.ttf);
+}
+@font-face {
+  font-family: federo;
+  src: url(../public/Federo/Federo-Regular.ttf);
+}
+@font-face {
+  font-family: mouse;
+  src: url(../public/Mouse_Memoirs/MouseMemoirs-Regular.ttf);
+}
+
+@font-face {
+  font-family: jost;
+  src: url(../public/Jost/Jost-VariableFont_wght.ttf);
 }
 
 @theme inline {
@@ -18,8 +35,7 @@
 @layer base {
   body {
     /* @apply bg-[#000000] relative font-sans h-screen overflow-x-hidden text-[#ce86ef]; */
-    @apply bg-[#000] relative font-sans h-screen overflow-x-hidden text-[#B67C52];
-    font-family: "Michroma", sans-serif;
+    @apply bg-[#161616] relative h-screen overflow-x-hidden text-[#FFFFFF] font-[jost];
   }
 }
 
@@ -29,6 +45,13 @@
   margin: 0;
   padding: 0;
   line-height: 1;
+}
+.noselect::selection {
+  background-color: transparent;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  pointer-events: none;
 }
 .select1::selection {
   color: #000000;
@@ -40,12 +63,8 @@ img::selection {
   background-color: transparent;
 }
 
-.noto {
-  font-family: "Noto Sans", sans-serif;
-}
-
-.michroma {
-  font-family: "Michroma", sans-serif;
+.menu-overlay {
+  clip-path: polygon(0 0, 100%0, 100% 0, 0 0);
 }
 
 .images {
@@ -123,7 +142,7 @@ img::selection {
 /* HOme maybe */
 .heading {
   font-size: 4rem;
-  font-weight: 900;
+  font-weight: 300;
   letter-spacing: -0.05rem;
   text-align: center;
   line-height: 1.3;
@@ -167,7 +186,7 @@ img::selection {
   position: relative;
   width: 60%;
   margin: 0 auto;
-  color: #4f4f4f;
+  color: #c5c4c4;
   --clip-value: 100%;
 }
 
@@ -176,7 +195,7 @@ img::selection {
   position: absolute;
   top: 0;
   left: 0;
-  color: #b67c52;
+  color: #161616;
   clip-path: inset(0 0 var(--clip-value) 0);
   will-change: clip-path;
 }
@@ -208,7 +227,7 @@ img::selection {
 }
 
 .services p {
-  font-size: 1.25rem;
+  font-size: 1.4vw;
   font-weight: 500;
   line-height: 1.5;
 }
@@ -225,7 +244,7 @@ img::selection {
 .service {
   width: 100%;
   height: 100svh;
-  padding: 1rem;
+  padding: 2rem;
   display: flex;
   gap: 2rem;
 }
@@ -283,11 +302,10 @@ footer img {
   object-fit: cover;
 }
 
-footer {
+/* footer {
   position: relative;
   width: 100vw;
   height: 75svh;
-  background-color: #0f0f0f;
   color: #fff;
   padding: 2rem;
   display: flex;
@@ -295,37 +313,10 @@ footer {
   justify-content: space-between;
   align-items: center;
   overflow: hidden;
-}
-
-footer h1 {
-  text-transform: uppercase;
-  font-size: 5vw;
-  font-weight: 500;
-  line-height: 0.85;
-}
+} */
 
 .copyright-info {
   width: 100%;
   display: flex;
   justify-content: space-between;
-}
-
-.explosion-container {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 200%;
-  pointer-events: none;
-}
-
-.explosion-particle-img {
-  position: absolute;
-  bottom: -200px;
-  left: 50%;
-  width: 150px;
-  height: auto;
-  object-fit: cover;
-  transform: translateX(-50%);
-  will-change: transform;
 }
