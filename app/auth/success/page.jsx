@@ -1,5 +1,10 @@
-// app/auth/success/page.tsx
-import AuthSuccessClient from "./AuthSuccessClient";
+// app/auth/success/page.jsx
+import dynamic from "next/dynamic";
+
+const AuthSuccessClient = dynamic(
+  () => import("./AuthSuccessClient"),
+  { ssr: false } // ensures it only renders on the client
+);
 
 export default function AuthSuccessPage() {
   return <AuthSuccessClient />;

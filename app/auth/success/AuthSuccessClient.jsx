@@ -1,4 +1,4 @@
-// app/auth/success/AuthSuccessClient.tsx
+// app/auth/success/AuthSuccessClient.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,7 +8,7 @@ export default function AuthSuccessClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const [error, setError] = (useState < string) | (null > null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (token) {
