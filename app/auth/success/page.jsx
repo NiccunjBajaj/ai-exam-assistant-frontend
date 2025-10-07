@@ -1,4 +1,5 @@
 // app/auth/success/page.jsx
+"use client";
 import dynamic from "next/dynamic";
 
 const AuthSuccessClient = dynamic(
