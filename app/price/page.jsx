@@ -101,7 +101,7 @@ export default function PricingPage() {
         key: orderData.key_id,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "ExamEase",
+        name: "Learnee",
         description: `Upgrade to ${plan?.name} plan`,
         order_id: orderData.order_id,
         handler: async (response) => {
@@ -122,7 +122,14 @@ export default function PricingPage() {
           name: "User",
           email: "user@example.com",
         },
-        theme: { color: "#ec4899" },
+        theme: { color: "#ffe243" },
+        method: {
+          upi: true, // Enable UPI
+          card: true,
+          netbanking: true,
+          wallet: true,
+          paylater: false, // Disable Pay Later
+        },
         modal: { ondismiss: () => setLoadingPlanId(null) },
       };
 
