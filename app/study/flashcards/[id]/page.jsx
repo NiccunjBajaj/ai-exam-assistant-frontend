@@ -6,7 +6,7 @@ import Spline from "@splinetool/react-spline";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
 
 export default function FlashcardDetailPage() {
-  const BACKEND_URL = process.env.BACKEND_URL;
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const { id } = useParams();
   const [cards, setCards] = useState([]);
   const token =

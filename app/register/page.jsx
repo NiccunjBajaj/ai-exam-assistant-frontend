@@ -6,7 +6,7 @@ import Link from "next/link";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 
 export default function RegisterPage() {
-  const BACKEND_URL = process.env.BACKEND_URL;
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const [formData, setFormData] = useState({
     username: "",
     email: "",

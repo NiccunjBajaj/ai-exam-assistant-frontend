@@ -43,6 +43,7 @@ const navLinksShort = [
 ];
 
 const Menu = () => {
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const pathname = usePathname();
   const router = useRouter();
   const [plan, setPlan] = useState(null);

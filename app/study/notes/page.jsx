@@ -10,7 +10,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 
 export default function NotesPage() {
-  const BACKEND_URL = process.env.BACKEND_URL;
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
 
   const [search, setSearch] = useState("");

@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 export default function GoogleLoginButton() {
-  const BACKEND_URL = process.env.BACKEND_URL;
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = () => {

@@ -12,7 +12,7 @@ import debounce from "lodash.debounce";
 import { PencilLine, SquarePen, Trash2Icon } from "lucide-react";
 
 function ChatContent() {
-  const BACKEND_URL = process.env.BACKEND_URL;
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   const router = useRouter();
 
@@ -136,7 +136,7 @@ function ChatContent() {
     const fetchSessions = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const res = await fetch("${BACKEND_URL}/sessions", {
+        const res = await fetch(`${BACKEND_URL}/sessions`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setPastSessions(await res.json());
@@ -165,6 +165,7 @@ function ChatContent() {
 
     const fetchMessages = async () => {
       try {
+        console.log(BACKEND_URL);
         const token = localStorage.getItem("access_token");
         const res = await fetch(`${BACKEND_URL}/messages/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` },

@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 const MAX_FILES = 5;
 
 const FileUploadArea = forwardRef(({ sessionId, onUploadSuccess }, ref) => {
-  const BACKEND_URL = process.env.BACKEND_URL;
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef(null);

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import StudyNav from "@/app/components/StudyNav";
 
 export default function QuizFromChatPage() {
-  const BACKEND_URL = process.env.BACKEND_URL;
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState("");

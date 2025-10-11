@@ -8,7 +8,7 @@ import { Trash2Icon } from "lucide-react";
 import StudyNav from "@/app/components/StudyNav";
 
 export default function QuizHomePage() {
-  const BACKEND_URL = process.env.BACKEND_URL;
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const [search, setSearch] = useState("");
   const [sessions, setSessions] = useState([]);
   const router = useRouter();

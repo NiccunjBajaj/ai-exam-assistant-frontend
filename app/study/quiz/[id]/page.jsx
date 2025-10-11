@@ -7,7 +7,7 @@ import Spline from "@splinetool/react-spline";
 import Link from "next/link";
 
 export default function QuizPage() {
-  const BACKEND_URL = process.env.BACKEND_URL;
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
   const { id } = useParams();
   const [quiz, setQuiz] = useState([]);

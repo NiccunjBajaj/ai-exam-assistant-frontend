@@ -10,6 +10,7 @@ import {
 } from "../../lib/razorpay";
 
 export default function PricingPage() {
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const [plans, setPlans] = useState([]);
   const [planID, setPlanID] = useState(null);
   const [loadingPlanId, setLoadingPlanId] = useState(null);
