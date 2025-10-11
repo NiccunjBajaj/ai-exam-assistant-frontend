@@ -136,7 +136,7 @@ const Menu = () => {
       className="menu-container font-[crushed] select z-[99999]"
       ref={menuRef}
     >
-      <div className="menu-bar text-[2vw] fixed top-[1vw] right-[1vw] z-[1] flex items-center font-[200]">
+      <div className="menu-bar text-[2vw] fixed top-[1vw] right-[0] z-[1] flex items-center font-[200]">
         {/* <div
           className="menu-logo hover_target flex items-center gap-3"
           data-cursor-scale="2"
@@ -145,18 +145,18 @@ const Menu = () => {
           <Link href={href}>{text}</Link>
         </div> */}
         <div
-          className="menu-open hover_target cursor-pointer w-[2vw] mx-[0.8vw] flex flex-col justify-center gap-2"
+          className="menu-open hover_target cursor-pointer w-[2vw] flex flex-col justify-center gap-2"
           data-cursor-scale="2"
           onClick={toggleMenu}
         >
           <div className="h-[0.3vw] rounded-full w-0 bg-[#fff] bar"></div>
-          <div className="h-[0.3vw] rounded-full w-0 bg-[#fff] bar"></div>
+          <div className="h-[0.3vw] rounded-full w-0 bg-[#ffe243] bar"></div>
           <div className="h-[0.3vw] rounded-full w-0 bg-[#fff] bar"></div>
         </div>
       </div>
 
-      <div className="menu-overlay fixed top-0 left-0 w-full h-screen px-[2vw] py-[1vw] text-[#1a1a1a] bg-[#ffe3434b] backdrop-blur-[20px] z-[2]">
-        <div className="menu-overlay-bar text-[2vw] flex justify-between">
+      <div className="menu-overlay fixed top-0 left-0 w-[100vw] h-screen text-[#1a1a1a] bg-[#77670cb7] backdrop-blur-[20px] z-[2]">
+        <div className="menu-overlay-bar text-[3vw] flex justify-between items-center">
           <div
             className="menu-logo hover_target flex items-center gap-3"
             data-cursor-scale="2"
@@ -179,13 +179,13 @@ const Menu = () => {
           <div className="menu-links">
             {navLinks.map((link, i) => (
               <div
-                className="menu-link-item-holder text-[12vw] px-[7vw] my-4 leading-[8vw] tracking-widest"
+                className="menu-link-item-holder w-[100vw] text-[12vw] my-4 leading-[8vw] tracking-widest"
                 key={i}
                 onClick={toggleMenu}
               >
                 <Link
                   href={link.href}
-                  className="menu-link w-full hover_click hover:bg-[#1616165c] hover:text-[#ffe862] transition-all duration-[0.4s] px-[1vw] py-[0.5vw] rounded-xl flex items-center gap-[2vw]"
+                  className="menu-link hover_click hover:bg-[#1616165c] hover:text-[#ffe862] transition-all duration-[0.4s] px-[1vw] py-[0.5vw] rounded-xl flex items-center justify-center gap-[2vw]"
                   data-cursor-label={link.data}
                 >
                   {link.icon}
@@ -194,16 +194,16 @@ const Menu = () => {
               </div>
             ))}
           </div>
-          <div className="menu-info flex flex-col justify-between gap-[2vw] items-end w-full pr-[2vw] py-[2vw]">
+          {/* <div className="menu-info flex flex-col justify-between gap-[2vw] items-end w-full pr-[2vw] py-[2vw]">
             <div className="menu-info-col text-[4vw] flex flex-col items-end justify-between w-full">
-              {/* <a href="">X &#8599;</a> */}
+              <a href="">X &#8599;</a>
               <a href="">Instagram &#8599;</a>
               <a href="">LinkedIn &#8599;</a>
             </div>
             <div className="menu-info-col text-[3.4vw]">
               <p>info@examease.com</p>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ import {
 
 export default function PricingPage() {
   const [plans, setPlans] = useState([]);
+  const [planID, setPlanID] = useState(null);
   const [loadingPlanId, setLoadingPlanId] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -18,11 +19,16 @@ export default function PricingPage() {
     fetchPlans();
   }, []);
 
+  useEffect(() => {
+    fetchPlan();
+  }, []);
+
   const fetchPlans = async () => {
     try {
       const res = await fetch("http://localhost:8000/plan/all");
       if (res.ok) {
         const data = await res.json();
+        console.log(data);
         setPlans(data);
       } else {
         toast.error("Failed to load plans");
@@ -33,6 +39,24 @@ export default function PricingPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchPlan = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    fetch("http://localhost:8000/plan/me", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setPlanID(data);
+        console.log(data);
+      })
+      .catch(console.error);
   };
 
   const formatFeatures = (plan) => {
@@ -144,22 +168,27 @@ export default function PricingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-900 via-black to-violet-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#161616] text-white flex items-center justify-center">
         <div className="text-xl">Loading plans...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 via-black to-violet-900 text-white flex flex-col items-center py-16 px-6">
-      <h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
+    <div className="bg-[#161616] flex flex-col items-center px-[5vw] pt-[0.5vw]">
+      <h1 className="text-[3.35vw] font-bold mb-4">Choose Your Plan</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full">
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className="rounded-2xl p-8 shadow-lg bg-gray-900 border border-gray-700"
+            className="rounded-2xl p-[1.5vw] shadow-lg bg-[#d5d5d5] text-[#161616]"
           >
-            <h2 className="text-2xl font-semibold mb-2">{plan.name}</h2>
+            <h2 className="text-2xl font-semibold mb-2 flex items-center justify-between">
+              {plan.name}
+              <span className="text-[1.1vw] bg-[#ffe34385] rounded-full px-[0.5vw]">
+                {plan.id == planID.planId ? "Active" : ""}
+              </span>{" "}
+            </h2>
             <p className="text-4xl font-bold mb-4">₹{plan.price}</p>
             <ul className="mb-6 space-y-2">
               {formatFeatures(plan).map((feature, idx) => (
@@ -171,11 +200,10 @@ export default function PricingPage() {
             </ul>
             <button
               onClick={() => upgradePlan(plan.id, getSubscriptionType(plan))}
-              disabled={loadingPlanId === plan.id}
               className={`w-full py-3 rounded-xl font-semibold ${
-                loadingPlanId === plan.id
-                  ? "bg-gray-600"
-                  : "bg-pink-600 hover:bg-pink-700"
+                plan.id === planID.planId
+                  ? "bg-[#161616] text-[#FFF] pointer-events-none opacity-[0.4]"
+                  : "bg-[#ffe34385] hover:bg-[#161616] text-[#161616] hover:text-[#FFF] cursor-pointer"
               }`}
             >
               {loadingPlanId === plan.id

@@ -65,11 +65,11 @@ const Hero = () => {
       },
     });
     gsap.to(".word", {
-      y: 0,
-      delay: 0.6,
-      duration: 1.3,
-      stagger: 0.25,
-      ease: "expo",
+      scale: 1,
+      rotate: 1,
+      duration: 0.7,
+      stagger: 0.1,
+      ease: "bounce.out",
     });
     gsap.to(".image", {
       scale: 1,
@@ -83,12 +83,12 @@ const Hero = () => {
       duration: 1.2,
       ease: "expo",
     });
-    gsap.to(".cta", {
+    gsap.to(".text", {
       y: 0,
       duration: 0.8,
       stagger: 0.05,
       ease: "expo",
-      delay: 1.2,
+      delay: 0.3,
     });
   });
 
@@ -102,19 +102,26 @@ const Hero = () => {
             alt="heroimage"
           /> */}
           <div className="overflow-hidden flex flex-col gap-7 h-full justify-center">
-            <div className="w-full flex flex-col justify-center px-10 word translate-y-[1000%]">
+            <div className="w-full flex flex-col justify-center px-10">
               <h1 className="leading-[11vw] font-[federo] noselect flex flex-col justify-center items-center">
-                <div className="text-[20vw]">
-                  L<span className="text-[#ffe243]">e</span>arn
-                  <span className="text-[#ffe243]">ee</span>
+                <div className="text-[20vw] flex">
+                  <div className="word scale-0">L</div>
+                  <div className="text-[#ffe243] word scale-0">e</div>
+                  <div className="word scale-0">a</div>
+                  <div className="word scale-0">r</div>
+                  <div className="word scale-0">n</div>
+                  <div className="text-[#ffe243] word scale-0">e</div>
+                  <div className="text-[#ffe243] word scale-0">e</div>
                 </div>
-                <div className="text-[7.5vw] tracking-[-0.6rem] font-[jost] font-[200] uppercase">
-                  a t<span className="text-[#ffe243]">oo</span>l b
-                  <span className="text-[#ffe243]">o</span>x
-                </div>
-                <div className="text-[2.5vw] leading-[0vw] font-[jost] tracking-wide uppercase">
-                  for <span className="text-[#ffe243]">st</span>uden
-                  <span className="text-[#ffe243]">ts</span>
+                <div className="overflow-hidden leading-[11vw] flex flex-col items-center justify-center">
+                  <div className="text-[7.5vw] tracking-[-0.5vw] font-[jost] font-[200] uppercase translate-y-[100vh] text">
+                    a t<span className="text-[#ffe243]">oo</span>l b
+                    <span className="text-[#ffe243]">o</span>x
+                  </div>
+                  <div className="text-[2.5vw] leading-0 font-[jost] tracking-wide uppercase translate-y-[100vh] text pb-[1vw]">
+                    for <span className="text-[#ffe243]">st</span>uden
+                    <span className="text-[#ffe243]">ts</span>
+                  </div>
                 </div>
               </h1>
             </div>
@@ -139,21 +146,21 @@ const Hero = () => {
       <section className="bg-[#161616] services relative w-full h-[100svh] flex flex-col justify-center items-center overflow-hidden">
         <div className="service-header">
           <img
-            className="w-full h-full object-cover"
+            className="w-[100vw] h-[100svh] object-cover"
             src="/learnorg.svg"
             alt=""
           />
         </div>
         <div className="service-header">
           <img
-            className="w-full h-full object-cover z-[-10]"
+            className="w-[100vw] h-[100svh] object-cover z-[-10]"
             src="/learn.svg"
             alt=""
           />
         </div>
         <div className="service-header">
           <img
-            className="w-full h-full object-cover"
+            className="w-[100vw] h-[100svh] object-cover"
             src="/learnorg.svg"
             alt=""
           />
@@ -167,13 +174,13 @@ const Hero = () => {
         </h1>
         <a
           href="/chat"
-          className="w-[15vw] p-4 bg-[#161616] hover:bg-[#ffe34385] text-[#efefef] hover:text-[#000000] text-2xl font-medium rounded-full transition-all duration-[0.3s]"
+          className="p-4 bg-[#161616] hover:bg-[#ffe34385] text-[#efefef] hover:text-[#000000] text-2xl font-medium rounded-full transition-all duration-[0.3s]"
         >
           Explore &#8599;
         </a>
       </section>
 
-      <section className="services mb-[163svh] bg-[#161616] font-[jost] noselect">
+      <section className="services bg-[#161616] font-[jost] noselect">
         <div className="service">
           <div className="col">
             <div className="service-copy leading-[5vw]">
@@ -195,13 +202,13 @@ const Hero = () => {
             </div>
           </div>
           <div className="col">
-            <img src="/img-1.jpeg" alt="" />
+            <img src="/chat.png" alt="" />
           </div>
         </div>
 
         <div className="service">
           <div className="col">
-            <img src="/img-2.jpeg" alt="" />
+            <img src="/rev.png" alt="" />
           </div>
           <div className="col">
             <div className="service-copy leading-[5vw]">
@@ -245,7 +252,7 @@ const Hero = () => {
             </div>
           </div>
           <div className="col">
-            <img src="/img-3.jpeg" alt="" />
+            <img src="/quiz.png" alt="" />
           </div>
         </div>
 
@@ -271,17 +278,17 @@ const Hero = () => {
             </div>
           </div>
         </div>
+        <footer className="select font-[mouse] rounded-t-[4vw] bg-[#fff] w-[100vw] h-screen text-[#161616] flex flex-col justify-between items-center p-[2vw]">
+          <h1 className="text-[8vw] uppercase leading-[4vw]">
+            The <span className="text-[#ffe34385]">future</span> is in Your
+            Hands
+          </h1>
+          <div className="flex w-[100vw] justify-between">
+            <p>&copy; 2025 Oblivon Decks</p>
+            <p>All rights reserved.</p>
+          </div>
+        </footer>
       </section>
-
-      <footer className="font-[mouse] rounded-t-[4vw] bg-[#fff] relative w-full h-[75svh] text-[#161616] flex flex-col justify-between overflow-hidden items-center p-[2vw] mt-[80vw]">
-        <h1 className="text-[8vw] uppercase leading-[4vw]">
-          The <span className="text-[#ffe34385]">future</span> is in Your Hands
-        </h1>
-        <div className="copyright-info">
-          <p>&copy; 2025 Oblivon Decks</p>
-          <p>All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 };
