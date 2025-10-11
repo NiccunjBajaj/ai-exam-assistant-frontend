@@ -106,7 +106,7 @@ const Menu = () => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
 
-    fetch("http://localhost:8000/plan/me", {
+    fetch(`${BACKEND_URL}/plan/me`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,

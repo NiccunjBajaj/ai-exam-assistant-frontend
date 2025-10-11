@@ -25,7 +25,7 @@ export default function PricingPage() {
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch("http://localhost:8000/plan/all");
+      const res = await fetch(`${BACKEND_URL}/plan/all`);
       if (res.ok) {
         const data = await res.json();
         console.log(data);
@@ -45,7 +45,7 @@ export default function PricingPage() {
     const token = localStorage.getItem("access_token");
     if (!token) return;
 
-    fetch("http://localhost:8000/plan/me", {
+    fetch(`${BACKEND_URL}/plan/me`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -94,17 +94,14 @@ export default function PricingPage() {
     try {
       const plan = plans.find((p) => p.id === planId);
       if (plan && plan.price === 0) {
-        const res = await fetch(
-          `http://localhost:8000/plan/upgrade/${planId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ subscription_type }),
-          }
-        );
+        const res = await fetch(`${BACKEND_URL}/plan/upgrade/${planId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ subscription_type }),
+        });
         const data = await res.json();
         if (res.ok) {
           toast.success(data.message);

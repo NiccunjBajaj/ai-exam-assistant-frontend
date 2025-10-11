@@ -6,6 +6,7 @@ import Spline from "@splinetool/react-spline";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
 
 export default function FlashcardDetailPage() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const { id } = useParams();
   const [cards, setCards] = useState([]);
   const token =
@@ -14,12 +15,9 @@ export default function FlashcardDetailPage() {
   useEffect(() => {
     if (!id) return;
     const fetchCards = async () => {
-      const res = await fetch(
-        `http://localhost:8000/flashcards/by-session/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await fetch(`${BACKEND_URL}/flashcards/by-session/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       setCards(data);
     };

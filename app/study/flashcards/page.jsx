@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 export default function FlashcardsPage() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const router = useRouter();
 
   const [search, setSearch] = useState("");
@@ -29,7 +30,7 @@ export default function FlashcardsPage() {
   );
 
   const fetchCards = async () => {
-    const res = await fetch("http://localhost:8000/flashcards", {
+    const res = await fetch(`${BACKEND_URL}/flashcards`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
@@ -42,12 +43,9 @@ export default function FlashcardsPage() {
   }, [token]);
 
   const fetchSessions = async () => {
-    const res = await fetch(
-      "http://localhost:8000/study-sessions?type=flashcard",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    const res = await fetch(`${BACKEND_URL}/study-sessions?type=flashcard`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     const data = await res.json();
     setSessions(data);
   };
@@ -69,7 +67,7 @@ export default function FlashcardsPage() {
     formData.append("file", file);
     formData.append("session_id", newId);
 
-    const res = await fetch("http://localhost:8000/upload-file", {
+    const res = await fetch(`${BACKEND_URL}/upload-file`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -92,7 +90,7 @@ export default function FlashcardsPage() {
     if (!uploadedText) return;
 
     setLoading(true);
-    const res = await fetch("http://localhost:8000/generate-flashcards", {
+    const res = await fetch(`${BACKEND_URL}/generate-flashcards`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -130,7 +128,7 @@ export default function FlashcardsPage() {
     if (!confirmDelete) return;
 
     try {
-      await fetch(`http://localhost:8000/study-sessions/${sessionId}`, {
+      await fetch(`${BACKEND_URL}/study-sessions/${sessionId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

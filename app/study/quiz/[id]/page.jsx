@@ -7,6 +7,7 @@ import Spline from "@splinetool/react-spline";
 import Link from "next/link";
 
 export default function QuizPage() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const router = useRouter();
   const { id } = useParams();
   const [quiz, setQuiz] = useState([]);
@@ -24,12 +25,9 @@ export default function QuizPage() {
     const fetchQuiz = async () => {
       if (!id) return;
 
-      const res = await fetch(
-        `http://localhost:8000/quizzes/by-session/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await fetch(`${BACKEND_URL}/quizzes/by-session/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       setQuiz(data);
       setAnswers(Array(data.length).fill(""));
@@ -51,7 +49,7 @@ export default function QuizPage() {
   };
 
   const evaluateAnswer = async (question, correctAnswer, userAnswer, marks) => {
-    const res = await fetch("http://localhost:8000/evaluate-answer", {
+    const res = await fetch(`${BACKEND_URL}/evaluate-answer`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -116,7 +114,7 @@ export default function QuizPage() {
     }));
 
     try {
-      await fetch("http://localhost:8000/quiz-attempts/save", {
+      await fetch(`${BACKEND_URL}/quiz-attempts/save`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -125,12 +123,9 @@ export default function QuizPage() {
         body: JSON.stringify(payload),
       });
 
-      const statusRes = await fetch(
-        `http://localhost:8000/quiz/${id}/draft-status`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const statusRes = await fetch(`${BACKEND_URL}/quiz/${id}/draft-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const status = await statusRes.json();
       setCanRetryPartial(status.can_retry_partial);
     } catch (err) {

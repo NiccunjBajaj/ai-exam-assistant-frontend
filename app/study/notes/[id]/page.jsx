@@ -8,6 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function NotesPage() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const router = useRouter();
   const { id } = useParams();
   const [notes, setNotes] = useState([]);
@@ -20,7 +21,7 @@ export default function NotesPage() {
   useEffect(() => {
     if (!id) return;
     const fetchNotes = async () => {
-      const res = await fetch(`http://localhost:8000/notes/by-session/${id}`, {
+      const res = await fetch(`${BACKEND_URL}/notes/by-session/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -31,7 +32,7 @@ export default function NotesPage() {
 
   const saveNote = useCallback(
     async (noteId, content) => {
-      await fetch(`http://localhost:8000/notes/${noteId}`, {
+      await fetch(`${BACKEND_URL}/notes/${noteId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -44,7 +45,7 @@ export default function NotesPage() {
   );
 
   const deleteNote = async (noteId) => {
-    await fetch(`http://localhost:8000/study-sessions/${noteId}`, {
+    await fetch(`${BACKEND_URL}/study-sessions/${noteId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });

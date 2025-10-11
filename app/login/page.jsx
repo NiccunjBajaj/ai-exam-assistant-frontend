@@ -6,6 +6,7 @@ import Link from "next/link";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 
 function Login() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -20,7 +21,7 @@ function Login() {
 
     const checkToken = async () => {
       try {
-        const res = await fetch("http://localhost:8000/auth/verify", {
+        const res = await fetch(`${BACKEND_URL}/auth/verify`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -46,7 +47,7 @@ function Login() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/auth/login", {
+      const res = await fetch(`${BACKEND_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

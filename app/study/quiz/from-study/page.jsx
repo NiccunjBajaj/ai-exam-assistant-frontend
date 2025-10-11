@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import StudyNav from "@/app/components/StudyNav";
 
 export default function QuizFromStudyPage() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const router = useRouter();
   const [notes, setNotes] = useState([]);
   const [search, setSearch] = useState("");
@@ -23,7 +24,7 @@ export default function QuizFromStudyPage() {
   );
 
   const fetchSessions = async () => {
-    const res = await fetch("http://localhost:8000/study-sessions?type=notes", {
+    const res = await fetch(`${BACKEND_URL}/study-sessions?type=notes`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
@@ -35,7 +36,7 @@ export default function QuizFromStudyPage() {
   }, [token]);
 
   const fetchNotes = async () => {
-    const res = await fetch("http://localhost:8000/notes", {
+    const res = await fetch(`${BACKEND_URL}/notes`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
@@ -61,7 +62,7 @@ export default function QuizFromStudyPage() {
     if (!title.trim() || !selectedNotes.length) return;
 
     setLoading(true);
-    const res = await fetch("http://localhost:8000/generate-quiz-from-study", {
+    const res = await fetch(`${BACKEND_URL}/generate-quiz-from-study`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

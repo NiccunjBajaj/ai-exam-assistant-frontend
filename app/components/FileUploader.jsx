@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 const MAX_FILES = 5;
 
 const FileUploadArea = forwardRef(({ sessionId, onUploadSuccess }, ref) => {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef(null);
@@ -21,7 +22,7 @@ const FileUploadArea = forwardRef(({ sessionId, onUploadSuccess }, ref) => {
     formData.append("file", file);
     formData.append("session_id", sessionId);
 
-    const res = await fetch("http://localhost:8000/upload-file", {
+    const res = await fetch(`${BACKEND_URL}/upload-file`, {
       method: "POST",
       body: formData,
     });

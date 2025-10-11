@@ -282,7 +282,7 @@ const Hero = () => {
           <h1 className="text-[8vw] uppercase leading-[4vw]">
             The <span className="text-[#ffe34385]">future</span> is in Your
             Hands
-          </h1>
+          </h1> 
           <div className="flex w-[100vw] justify-between">
             <p>&copy; 2025 Oblivon Decks</p>
             <p>All rights reserved.</p>

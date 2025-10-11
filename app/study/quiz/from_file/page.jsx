@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import StudyNav from "@/app/components/StudyNav";
 
 export default function QuizFromFilePage() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const router = useRouter();
   const inputRef = useRef(null);
 
@@ -32,7 +33,7 @@ export default function QuizFromFilePage() {
     formData.append("file", selected);
     formData.append("session_id", "quiz-from-file");
 
-    const res = await fetch("http://localhost:8000/upload-file", {
+    const res = await fetch(`${BACKEND_URL}/upload-file`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -48,7 +49,7 @@ export default function QuizFromFilePage() {
 
     setLoading(true);
 
-    const res = await fetch("http://localhost:8000/generate-quiz", {
+    const res = await fetch(`${BACKEND_URL}/generate-quiz`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

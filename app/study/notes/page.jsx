@@ -10,6 +10,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 
 export default function NotesPage() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const router = useRouter();
 
   const [search, setSearch] = useState("");
@@ -31,7 +32,7 @@ export default function NotesPage() {
   );
 
   const fetchNotes = async () => {
-    const res = await fetch("http://localhost:8000/notes", {
+    const res = await fetch(`${BACKEND_URL}/notes`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
@@ -44,7 +45,7 @@ export default function NotesPage() {
   }, [token]);
 
   const fetchSessions = async () => {
-    const res = await fetch("http://localhost:8000/study-sessions?type=notes", {
+    const res = await fetch(`${BACKEND_URL}/study-sessions?type=notes`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
@@ -68,7 +69,7 @@ export default function NotesPage() {
     formData.append("file", file);
     formData.append("session_id", newId);
 
-    const res = await fetch("http://localhost:8000/upload-file", {
+    const res = await fetch(`${BACKEND_URL}/upload-file`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -91,7 +92,7 @@ export default function NotesPage() {
     if (!uploadedText) return;
 
     setLoading(true);
-    const res = await fetch("http://localhost:8000/generate-notes", {
+    const res = await fetch(`${BACKEND_URL}/generate-notes`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -121,7 +122,7 @@ export default function NotesPage() {
     if (!confirmDelete) return;
 
     try {
-      await fetch(`http://localhost:8000/study-sessions/${sessionId}`, {
+      await fetch(`${BACKEND_URL}/study-sessions/${sessionId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

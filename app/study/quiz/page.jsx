@@ -8,6 +8,7 @@ import { Trash2Icon } from "lucide-react";
 import StudyNav from "@/app/components/StudyNav";
 
 export default function QuizHomePage() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const [search, setSearch] = useState("");
   const [sessions, setSessions] = useState([]);
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function QuizHomePage() {
   );
 
   const fetchFlashcardSessions = async () => {
-    const res = await fetch("http://localhost:8000/study-sessions?type=quiz", {
+    const res = await fetch(`${BACKEND_URL}/study-sessions?type=quiz`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
@@ -35,7 +36,7 @@ export default function QuizHomePage() {
     if (!confirmDelete) return;
 
     try {
-      await fetch(`http://localhost:8000/study-sessions/${sessionId}`, {
+      await fetch(`${BACKEND_URL}/study-sessions/${sessionId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function StudyPage() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const [userName, setUserName] = useState("");
 
   const token =
@@ -16,7 +17,7 @@ export default function StudyPage() {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const res = await fetch("http://localhost:8000/me", {
+        const res = await fetch(`${BACKEND_URL}/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

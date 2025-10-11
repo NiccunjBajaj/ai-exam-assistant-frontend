@@ -3,12 +3,13 @@
 import { useState } from "react";
 
 export default function GoogleLoginButton() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = () => {
     setIsLoading(true);
     try {
-      window.location.href = "http://localhost:8000/auth/google-login";
+      window.location.href = `${BACKEND_URL}/auth/google-login`;
     } catch (error) {
       console.error("Failed to redirect to Google login:", error);
       setIsLoading(false);

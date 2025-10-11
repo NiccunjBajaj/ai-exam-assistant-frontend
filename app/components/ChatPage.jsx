@@ -12,6 +12,8 @@ import debounce from "lodash.debounce";
 import { PencilLine, SquarePen, Trash2Icon } from "lucide-react";
 
 function ChatContent() {
+  const BACKEND_URL = process.env.BACKEND_URL;
+
   const router = useRouter();
 
   const [query, setQuery] = useState("");
@@ -73,7 +75,7 @@ function ChatContent() {
 
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://localhost:8000/rename-session/${id}`, {
+      const res = await fetch(`${BACKEND_URL}/rename-session/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +99,7 @@ function ChatContent() {
 
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://localhost:8000/delete-session/${id}`, {
+      const res = await fetch(`${BACKEND_URL}/delete-session/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -134,7 +136,7 @@ function ChatContent() {
     const fetchSessions = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const res = await fetch("http://localhost:8000/sessions", {
+        const res = await fetch("${BACKEND_URL}/sessions", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setPastSessions(await res.json());
@@ -164,7 +166,7 @@ function ChatContent() {
     const fetchMessages = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const res = await fetch(`http://localhost:8000/messages/${sessionId}`, {
+        const res = await fetch(`${BACKEND_URL}/messages/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -205,18 +207,15 @@ function ChatContent() {
     setError("");
 
     try {
-      const sesOk = await fetch(
-        `http://localhost:8000/session-exists/${sessionId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      ).then((r) => r.json());
+      const sesOk = await fetch(`${BACKEND_URL}/session-exists/${sessionId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json());
 
       if (!sesOk.exists) {
         const title =
           prompt("📝 Name your new chat")?.trim() ||
           `Chat on ${new Date().toLocaleString()}`;
-        await fetch("http://localhost:8000/create-session", {
+        await fetch(`${BACKEND_URL}/create-session`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -226,7 +225,7 @@ function ChatContent() {
         });
       }
 
-      const res = await fetch("http://localhost:8000/chat", {
+      const res = await fetch(`${BACKEND_URL}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import StudyNav from "@/app/components/StudyNav";
 
 export default function QuizFromChatPage() {
+  const BACKEND_URL = process.env.BACKEND_URL;
   const router = useRouter();
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState("");
@@ -18,7 +19,7 @@ export default function QuizFromChatPage() {
 
   useEffect(() => {
     const fetchSessions = async () => {
-      const res = await fetch("http://localhost:8000/sessions", {
+      const res = await fetch(`${BACKEND_URL}/sessions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -32,7 +33,7 @@ export default function QuizFromChatPage() {
     if (!selectedSession || !title.trim()) return;
     setLoading(true);
 
-    const res = await fetch("http://localhost:8000/generate-quiz-from-chat", {
+    const res = await fetch(`${BACKEND_URL}/generate-quiz-from-chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
