@@ -312,3 +312,30 @@ footer img {
   display: flex;
   justify-content: space-between;
 }
+
+#card-1 .card-inner {
+  background-color: #161616;
+  color: #ffffff;
+}
+#card-2 .card-inner {
+  background-color: #ffffff;
+  color: #161616;
+}
+#card-3 .card-inner {
+  background-color: #ffe243;
+}
+#card-4 .card-inner {
+  background-color: #161616;
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .card h1 {
+    margin-bottom: 5vw;
+  }
+
+  .card-content p,
+  .card-img {
+    display: none;
+  }
+}

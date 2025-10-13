@@ -23,7 +23,7 @@ const Card = ({ title, span, copy, index }) => {
         <div className="card-img flex-1 aspect-[16/9] rounded-[1.2vw] overflow-hidden">
           <img
             className="w-full h-full object-cover"
-            src={`/card${index + 1}.png`}
+            src={`/card-${index + 1}.png`}
             alt={title}
           />
         </div>

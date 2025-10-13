@@ -137,14 +137,14 @@ const Menu = () => {
       className="menu-container font-[crushed] select z-[99999]"
       ref={menuRef}
     >
-      <div className="menu-bar text-[2vw] fixed top-[1vw] right-[0] z-[1] flex items-center font-[200]">
-        {/* <div
-          className="menu-logo hover_target flex items-center gap-3"
-          data-cursor-scale="2"
-        >
-          <User className="w-[2vw] cursor-pointer" />
-          <Link href={href}>{text}</Link>
-        </div> */}
+      <div className="menu-bar fixed top-[0] right-[0] z-[1] flex items-center justify-between w-full font-[200]">
+        <div className="w-[8vw]">
+          <img
+            className="w-full h-full object-cover"
+            src="/logo.svg"
+            alt="logo"
+          />
+        </div>
         <div
           className="menu-open hover_target cursor-pointer w-[2vw] flex flex-col justify-center gap-2"
           data-cursor-scale="2"
@@ -158,12 +158,12 @@ const Menu = () => {
 
       <div className="menu-overlay fixed top-0 left-0 w-[100vw] h-screen text-[#1a1a1a] bg-[#77670cb7] backdrop-blur-[20px] z-[2]">
         <div className="menu-overlay-bar text-[3vw] flex justify-between items-center">
-          <div
-            className="menu-logo hover_target flex items-center gap-3"
-            data-cursor-scale="2"
-          >
-            <User className="w-[2vw] cursor-pointer font-[900]" />
-            <a href="/">Learnee</a>
+          <div className="w-[8vw]">
+            <img
+              className="w-full h-full object-cover"
+              src="/logoinv.svg"
+              alt="logo"
+            />
           </div>
           <div
             className="menu-close hover_target cursor-pointer text-[4vw]"
