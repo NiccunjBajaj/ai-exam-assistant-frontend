@@ -12,7 +12,7 @@ import {
 export default function PricingPage() {
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const [plans, setPlans] = useState([]);
-  const [planID, setPlanID] = useState(null);
+  const [planID, setPlanID] = useState({});
   const [loadingPlanId, setLoadingPlanId] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -199,7 +199,7 @@ export default function PricingPage() {
             <button
               onClick={() => upgradePlan(plan.id, getSubscriptionType(plan))}
               className={`w-full py-3 rounded-xl font-semibold ${
-                plan.id === planID.planId
+                plan.id === planID?.planId
                   ? "bg-[#161616] text-[#FFF] pointer-events-none opacity-[0.4]"
                   : "bg-[#ffe34385] hover:bg-[#161616] text-[#161616] hover:text-[#FFF] cursor-pointer"
               }`}

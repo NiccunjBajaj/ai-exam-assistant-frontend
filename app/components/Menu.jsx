@@ -130,6 +130,11 @@ const Menu = () => {
       duration: 0.2,
       delay: 0.6,
     });
+    gsap.to(".image", {
+      x: 0,
+      duration: 0.2,
+      delay: 0.6,
+    });
   });
 
   return (
@@ -138,12 +143,14 @@ const Menu = () => {
       ref={menuRef}
     >
       <div className="menu-bar fixed top-[0] right-[0] z-[1] flex items-center justify-between w-full font-[200]">
-        <div className="w-[8vw]">
-          <img
-            className="w-full h-full object-cover"
-            src="/logo.svg"
-            alt="logo"
-          />
+        <div className="overflow-hidden">
+          <div className="image w-[8vw] translate-x-[-100%]">
+            <img
+              className="w-full h-full object-cover"
+              src="/logo.svg"
+              alt="logo"
+            />
+          </div>
         </div>
         <div
           className="menu-open hover_target cursor-pointer w-[2vw] flex flex-col justify-center gap-2"

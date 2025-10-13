@@ -12,7 +12,7 @@ if (!gsap.core.globals().ScrollTrigger) {
 const Card = ({ title, span, copy, index }) => {
   return (
     <div className="card relative text-[#161616]" id={`card-${index + 1}`}>
-      <div className="card-inner relative will-change-transform w-full h-full p-[3vw] flex gap-[5vw]">
+      <div className="card-inner rounded-t-4xl relative will-change-transform w-full h-full p-[3vw] flex gap-[5vw]">
         <div className="card-content flex-3">
           <h1 className="text-[5vw] font-[600] leading-[1] mb-[4vw]">
             {title}

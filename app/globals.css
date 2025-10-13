@@ -333,9 +333,4 @@ footer img {
   .card h1 {
     margin-bottom: 5vw;
   }
-
-  .card-content p,
-  .card-img {
-    display: none;
-  }
 }
