@@ -1,14 +1,63 @@
 "use client";
-import React from "react";
+import React, { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Flip } from "gsap/Flip";
-import AnimatedCopy from "./AnimatedCopy";
 
-gsap.registerPlugin(ScrollTrigger, Flip);
+if (!gsap.core.globals().ScrollTrigger) {
+  gsap.registerPlugin(ScrollTrigger, Flip);
+}
+
+const Card = ({ title, span, copy, index }) => {
+  return (
+    <div className="card relative text-[#161616]" id={`card-${index + 1}`}>
+      <div className="card-inner relative will-change-transform w-full h-full p-[3vw] flex gap-[5vw]">
+        <div className="card-content flex-3">
+          <h1 className="text-[5vw] font-[600] leading-[1] mb-[4vw]">
+            {title}
+            <span>{span}</span>
+          </h1>
+          <p className="text-[1.3vw] font-[500]">{copy}</p>
+        </div>
+        <div className="card-img flex-1 aspect-[16/9] rounded-[1.2vw] overflow-hidden">
+          <img
+            className="w-full h-full object-cover"
+            src={`/card${index + 1}.png`}
+            alt={title}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Hero = () => {
+  const containerRef = useRef();
+
+  const cards = [
+    {
+      title: "Chat",
+      span: "BOT",
+      copy: "Proff is an intelligent AI-powered study assistant designed to simplify exam preparation. It provides instant answers based on mark distribution and can also generate structured notes and flashcards. With Proff, students can stay productive, understand concepts faster, and prepare efficiently for exams with a focused learning support.",
+    },
+    {
+      title: "Re",
+      span: "vision",
+      copy: "Revision becomes effortless with learnee. It helps students quickly review key concepts using AI-generated notes and flashcards tailored to their syllabus and mark distribution. With smart summaries, and instant answers, our platform ensures every revision session is focused, efficient, and perfectly aligned with exam goals.",
+    },
+    {
+      title: "Quiz",
+      span: "zz",
+      copy: "Quiz System lets students test their understanding through personalized quizzes generated from Chat Discussions, Study Materials, or Uploaded Files. Each quiz follows the exam’s mark distribution and includes instant feedback to help students identify weak areas, improve retention, and make their preparation more focused and effective.",
+    },
+    {
+      title: "Study",
+      span: "",
+      copy: "Study on Leanree is your personalized learning hub — where AI transforms chat into quizzez, uploaded files into organized notes and flashcards. It helps you revise smarter with concise summaries and question breakdowns, making exam preparation efficient and engaging.",
+    },
+  ];
+
   useGSAP(() => {
     document.querySelectorAll(".animate-text").forEach((textElement) => {
       const text = textElement.textContent?.trim() ?? "";
@@ -90,6 +139,53 @@ const Hero = () => {
       ease: "expo",
       delay: 0.3,
     });
+
+    if (typeof window === "undefined") return;
+    if (!containerRef.current) return;
+
+    const cards = gsap.utils.toArray(".card");
+
+    // Safely create scroll triggers
+    if (cards.length) {
+      ScrollTrigger.create({
+        trigger: cards[0],
+        start: "top 35%",
+        endTrigger: cards[cards.length - 1],
+        end: "top 30%",
+        pin: ".intro",
+        pinSpacing: false,
+      });
+
+      cards.forEach((card, index) => {
+        const cardInner = card.querySelector(".card-inner");
+        if (index === cards.length - 1 || !cardInner) return;
+
+        ScrollTrigger.create({
+          trigger: card,
+          start: "top 35%",
+          endTrigger: ".outro",
+          end: "top 65%",
+          pin: true,
+          pinSpacing: false,
+        });
+
+        gsap.to(cardInner, {
+          y: `-${(cards.length - index) * 14}vh`,
+          ease: "none",
+          scrollTrigger: {
+            trigger: card,
+            start: "top 35%",
+            endTrigger: ".outro",
+            end: "top 65%",
+            scrub: true,
+          },
+        });
+      });
+    }
+
+    return () => {
+      ScrollTrigger.getAll().forEach((t) => t.kill());
+    };
   });
 
   return (
@@ -129,7 +225,7 @@ const Hero = () => {
         </section>
       </div>
 
-      <section className="about rounded-[4vw] relative bg-[#f2f2f2] flex flex-col gap-[2vw]">
+      <section className="about rounded-t-[4vw] relative bg-[#f2f2f2] flex flex-col gap-[2vw]">
         <h1 className="animate-text heading font-[jost] font-[100]">
           Your AI-powered exam assistant, designed to help students learn
           smarter and faster. It provides instant answers tailored to exam
@@ -166,23 +262,48 @@ const Hero = () => {
           />
         </div>
       </section>
+      <div ref={containerRef}>
+        <section className="intro services-copy relative mt-[155svh] pt-[2rem] pr-[2rem] pb-[25svh] pl-[2rem] text-center bg-[#fff] rounded-t-[4vw] flex flex-col items-center gap-[2vw]">
+          <h1 className="animate-text heading font-[jost]">
+            Generate concise notes, and create flashcards for quick revision,
+            making studying more personalized, efficient, and engaging.
+          </h1>
+          <a
+            href="/chat"
+            className="p-4 bg-[#161616] hover:bg-[#ffe34385] text-[#efefef] hover:text-[#000000] text-2xl font-medium rounded-full transition-all duration-[0.3s]"
+          >
+            Explore &#8599;
+          </a>
+        </section>
+        <section className="cards">
+          {cards.map((card, index) => (
+            <Card
+              key={index}
+              {...card}
+              index={index}
+              containerRef={containerRef}
+            />
+          ))}
+        </section>
+        <footer className="outro relative w-screen h-screen p-[3vw] bg-[#161616]">
+          <h1 className="text-[5vw] font-[600] leading-[1] mb-[3vw]">
+            Leanree
+          </h1>
+        </footer>
 
-      <section className="services-copy relative mt-[155svh] pt-[2rem] pr-[2rem] pb-[25svh] pl-[2rem] text-center bg-[#fff] rounded-[4vw] flex flex-col items-center gap-[2vw]">
-        <h1 className="animate-text heading font-[jost]">
-          Generate concise notes, and create flashcards for quick revision,
-          making studying more personalized, efficient, and engaging.
+        {/* <footer className="select font-[mouse] rounded-t-[4vw] bg-[#fff] w-[100vw] h-screen text-[#161616] flex flex-col justify-between items-center p-[2vw]">
+        <h1 className="text-[8vw] uppercase leading-[4vw]">
+          The <span className="text-[#ffe34385]">future</span> is in Your
+          Hands
         </h1>
-        <a
-          href="/chat"
-          className="p-4 bg-[#161616] hover:bg-[#ffe34385] text-[#efefef] hover:text-[#000000] text-2xl font-medium rounded-full transition-all duration-[0.3s]"
-        >
-          Explore &#8599;
-        </a>
-      </section>
-
-      <section className="services bg-[#161616] font-[jost] noselect">
+        <div className="flex w-[100vw] justify-between">
+          <p>&copy; 2025 Oblivon Decks</p>
+          <p>All rights reserved.</p>
+        </div>
+      </footer> */}
+        {/* <section className=" bg-[#161616] font-[jost] noselect">
         <div className="service">
-          <div className="col">
+        <div className="col">
             <div className="service-copy leading-[5vw]">
               <h3 className="text-[5vw] font-[federo] tracking-wider">
                 Chat<span className="text-[#ffe243] uppercase">bot</span>
@@ -232,7 +353,7 @@ const Hero = () => {
 
         <div className="service">
           <div className="col">
-            <div className="service-copy leading-[5vw]">
+            <div className="service-copy">
               <h3 className="text-[5vw] font-[federo] tracking-wider">
                 Qui<span className="text-[#ffe243]">zzz</span>
               </h3>
@@ -258,21 +379,18 @@ const Hero = () => {
 
         <div className="service">
           <div className="col">
-            <img src="/img-4.jpeg" alt="" />
+            <img src="/study.png" alt="" />
           </div>
           <div className="col">
             <div className="service-copy leading-[5vw]">
-              <h3 className="text-[5vw] font-[federo] tracking-wider">
-                Contact
-              </h3>
+              <h3 className="text-[5vw] font-[federo] tracking-wider">Study</h3>
               <AnimatedCopy>
                 <p>
-                  Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                  Doloribus aspernatur rem impedit dolore omnis necessitatibus
-                  animi ipsa commodi, laborum quos delectus id ex, nulla totam,
-                  minima distinctio nemo odio atque? Dolorem, est optio!
-                  Nesciunt cum vel perspiciatis nam impedit natus aperiam eius
-                  optio dicta vero fugiat, ducimus doloremque ratione quam?
+                  Study on Leanree is your personalized learning hub — where AI
+                  transforms chat into quizzez, uploaded files into organized
+                  notes and flashcards. It helps you revise smarter with concise
+                  summaries and question breakdowns, making exam preparation
+                  efficient and engaging.
                 </p>
               </AnimatedCopy>
             </div>
@@ -282,13 +400,14 @@ const Hero = () => {
           <h1 className="text-[8vw] uppercase leading-[4vw]">
             The <span className="text-[#ffe34385]">future</span> is in Your
             Hands
-          </h1> 
+          </h1>
           <div className="flex w-[100vw] justify-between">
             <p>&copy; 2025 Oblivon Decks</p>
             <p>All rights reserved.</p>
           </div>
         </footer>
-      </section>
+      </section> */}
+      </div>
     </div>
   );
 };
