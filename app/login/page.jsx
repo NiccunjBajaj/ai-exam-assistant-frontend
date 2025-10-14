@@ -1,46 +1,49 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 
-function Login() {
+export default function LoginRegisterPage() {
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const from = searchParams.get("from") || "/chat";
 
+  const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Login form
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+
+  // Register form
+  const [registerData, setRegisterData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  // Auto-redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
 
-    const checkToken = async () => {
+    const verifyToken = async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/auth/verify`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (res.ok) {
-          router.push("/chat");
-        } else {
-          localStorage.clear();
-        }
-      } catch (err) {
-        console.error("Token verification failed:", err);
+        if (res.ok) router.push("/");
+        else localStorage.clear();
+      } catch {
         localStorage.clear();
       }
     };
-
-    checkToken();
+    verifyToken();
   }, []);
 
+  // Handle login
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -49,18 +52,65 @@ function Login() {
     try {
       const res = await fetch(`${BACKEND_URL}/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginData),
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.detail || "Login failed");
 
       localStorage.setItem("access_token", data.access_token);
-      router.push(from);
+      router.push("/");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle register
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (registerData.password.length < 6)
+      return setError("Password must be at least 6 characters long");
+    if (registerData.password !== registerData.confirmPassword)
+      return setError("Passwords do not match");
+    if (registerData.username.length < 2)
+      return setError("Username must be at least 2 characters long");
+
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: registerData.username,
+          email: registerData.email,
+          password: registerData.password,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Registration failed");
+
+      // Auto-login after register
+      const loginRes = await fetch(`${BACKEND_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: registerData.email,
+          password: registerData.password,
+        }),
+      });
+
+      const loginData = await loginRes.json();
+      if (!loginRes.ok)
+        throw new Error(loginData.detail || "Auto-login failed");
+
+      localStorage.setItem("access_token", loginData.access_token);
+      router.push("/");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -69,92 +119,177 @@ function Login() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 px-4">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-lg">
-        <h2 className="text-3xl font-bold text-center mb-6 text-black">
-          Login to ExamEase
-        </h2>
-
-        {error && (
-          <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+    <main className="min-h-screen flex items-center justify-center bg-[#161616] px-4">
+      <div className="flex w-[70vw] justify-center max-w-5xl h-[70vh] relative overflow-hidden rounded-3xl shadow-lg">
+        <AnimatePresence mode="wait">
+          {isLogin ? (
+            // ---------------- LOGIN PANEL ----------------
+            <motion.div
+              key="login"
+              initial={{ width: "65%", opacity: 0 }}
+              animate={{ width: "65%", opacity: 1 }}
+              exit={{ width: "35%", opacity: 0 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              className="bg-[#1e1e1e] text-white rounded-r-3xl p-[3vw] flex flex-col justify-center"
             >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+              <h1 className="text-[3vw] text-[#ffe243] mb-[2vw]">Learnee</h1>
+              {error && (
+                <div className="bg-red-600/30 text-[#ffe243] px-4 py-2 rounded mb-3 text-sm">
+                  {error}
+                </div>
+              )}
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={loginData.email}
+                  onChange={(e) =>
+                    setLoginData({ ...loginData, email: e.target.value })
+                  }
+                  required
+                  className="w-full px-4 py-2 rounded bg-[#606060] outline-none"
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={loginData.password}
+                  onChange={(e) =>
+                    setLoginData({ ...loginData, password: e.target.value })
+                  }
+                  required
+                  className="w-full px-4 py-2 rounded bg-[#606060] outline-none"
+                />
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold transition-colors ${
-              isLoading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Logging in...
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`w-full bg-[#606060] hover:bg-[#ffe243] hover:text-[#161616] text-white py-2 rounded font-semibold transition-all ${
+                    isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isLoading ? "Logging in..." : "Login"}
+                </button>
+              </form>
+
+              <div className="my-4 text-center text-[#ffe243]">or</div>
+              <div className="mx-auto w-fit">
+                <GoogleLoginButton />
               </div>
-            ) : (
-              "Login"
-            )}
-          </button>
-        </form>
 
-        <div className="my-4 text-center text-gray-500">or</div>
+              <p className="text-center text-sm mt-4 text-[#ffe243]">
+                Don’t have an account?{" "}
+                <span
+                  onClick={() => setIsLogin(false)}
+                  className="cursor-pointer underline"
+                >
+                  Sign up
+                </span>
+              </p>
+            </motion.div>
+          ) : (
+            // ---------------- SIGNUP PANEL ----------------
+            <motion.div
+              key="signup"
+              initial={{ width: "35%", opacity: 0 }}
+              animate={{ width: "65%", opacity: 1 }}
+              exit={{ width: "35%", opacity: 0 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              className="bg-[#ffe243] text-[#161616] rounded-r-3xl p-[3vw] flex flex-col justify-center"
+            >
+              <h1 className="text-[2.5vw] font-semibold mb-[1vw]">
+                Create Account
+              </h1>
 
-        <GoogleLoginButton />
+              {error && (
+                <div className="bg-red-600/30 text-[#161616] px-4 py-2 rounded mb-3 text-sm">
+                  {error}
+                </div>
+              )}
 
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
-            Register
-          </Link>
-        </p>
+              <form onSubmit={handleRegister} className="space-y-4 mt-[1vw]">
+                <input
+                  type="text"
+                  placeholder="Username"
+                  value={registerData.username}
+                  onChange={(e) =>
+                    setRegisterData({
+                      ...registerData,
+                      username: e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-4 py-2 rounded bg-[#fff] outline-none"
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={registerData.email}
+                  onChange={(e) =>
+                    setRegisterData({
+                      ...registerData,
+                      email: e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-4 py-2 rounded bg-[#fff] outline-none"
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={registerData.password}
+                  onChange={(e) =>
+                    setRegisterData({
+                      ...registerData,
+                      password: e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-4 py-2 rounded bg-[#fff] outline-none"
+                />
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={registerData.confirmPassword}
+                  onChange={(e) =>
+                    setRegisterData({
+                      ...registerData,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                  required
+                  className="w-full px-4 py-2 rounded bg-[#fff] outline-none"
+                />
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`w-full bg-[#161616] text-[#ffe243] hover:bg-[#606060] hover:text-[#fff] py-2 rounded font-semibold transition-all ${
+                    isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isLoading ? "Creating account..." : "Sign Up"}
+                </button>
+              </form>
+
+              <div className="my-4 text-center text-[#161616]">or</div>
+              <div className="mx-auto w-fit">
+                <GoogleLoginButton />
+              </div>
+
+              <p className="text-center text-sm mt-4 text-[#161616]">
+                Already have an account?{" "}
+                <span
+                  onClick={() => setIsLogin(true)}
+                  className="cursor-pointer underline"
+                >
+                  Login
+                </span>
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </main>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Login />
-    </Suspense>
   );
 }

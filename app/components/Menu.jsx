@@ -13,6 +13,7 @@ import {
   User,
   XIcon,
 } from "lucide-react";
+import { useAuth } from "./AuthContext";
 
 const navLinks = [
   { href: "/", label: "HOME", data: "home", icon: <HomeIcon size={130} /> },
@@ -47,18 +48,7 @@ const Menu = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [plan, setPlan] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  const getLinkData = () => {
-    if (pathname === "/") return { href: "/", text: "EXAMEASE" };
-    if (pathname.startsWith("/study")) return { href: "/study", text: "STUDY" };
-    if (pathname.startsWith("/contact"))
-      return { href: "/contact", text: "CONTACT" };
-    if (pathname === "/chat") return { href: "/chat", text: "ASTRA" };
-    return { href: "/", text: "EXAMEASE" };
-  };
-
-  const { href, text } = getLinkData();
+  const { isLoggedIn, logout } = useAuth();
 
   const menuRef = useRef(null);
   const tl = useRef(null);
@@ -91,17 +81,6 @@ const Menu = () => {
     if (isMenuOpen) tl.current?.play();
     else tl.current?.reverse();
   }, [isMenuOpen]);
-
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    setIsLoggedIn(!!token);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    setIsLoggedIn(false);
-    router.push("/");
-  };
 
   const fetchPlan = async () => {
     const token = localStorage.getItem("access_token");
@@ -137,12 +116,14 @@ const Menu = () => {
     });
   });
 
+  if (pathname === "/login" || pathname === "/register") return null;
+
   return (
     <div
       className="menu-container font-[crushed] select z-[99999]"
       ref={menuRef}
     >
-      <div className="menu-bar fixed top-[0] right-[0] z-[1] flex items-center justify-between w-full font-[200]">
+      <div className="menu-bar fixed top-[0] right-[0] w-screen z-[1] flex items-center justify-between font-[200]">
         <div className="overflow-hidden">
           <div className="image w-[8vw] translate-x-[-100%]">
             <img
@@ -152,14 +133,26 @@ const Menu = () => {
             />
           </div>
         </div>
-        <div
-          className="menu-open hover_target cursor-pointer w-[2vw] flex flex-col justify-center gap-2"
-          data-cursor-scale="2"
-          onClick={toggleMenu}
-        >
-          <div className="h-[0.3vw] rounded-full w-0 bg-[#fff] bar"></div>
-          <div className="h-[0.3vw] rounded-full w-0 bg-[#ffe243] bar"></div>
-          <div className="h-[0.3vw] rounded-full w-0 bg-[#fff] bar"></div>
+        <div className="flex gap-[2vw]">
+          {isLoggedIn ? (
+            <button
+              className="cursor-pointer bg-[#606060] font-[400] text-[#161616] hover:bg-red-500 hover:text-[#fff] px-[0.5vw] rounded-3xl text-[1.2vw]"
+              onClick={logout}
+            >
+              Logout
+            </button>
+          ) : (
+            ""
+          )}
+          <div
+            className="menu-open hover_target cursor-pointer w-[2vw] flex flex-col justify-center gap-2"
+            data-cursor-scale="2"
+            onClick={toggleMenu}
+          >
+            <div className="h-[0.3vw] rounded-full w-100 bg-[#fff] bar"></div>
+            <div className="h-[0.3vw] rounded-full w-100 bg-[#ffe243] bar"></div>
+            <div className="h-[0.3vw] rounded-full w-100 bg-[#fff] bar"></div>
+          </div>
         </div>
       </div>
 
@@ -172,6 +165,7 @@ const Menu = () => {
               alt="logo"
             />
           </div>
+
           <div
             className="menu-close hover_target cursor-pointer text-[4vw]"
             data-cursor-scale="2"

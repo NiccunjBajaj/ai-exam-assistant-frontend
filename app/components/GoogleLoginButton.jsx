@@ -20,7 +20,7 @@ export default function GoogleLoginButton() {
     <button
       onClick={handleLogin}
       disabled={isLoading}
-      className={`w-full flex items-center justify-center space-x-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg transition-colors ${
+      className={`w-[1/2] flex items-center justify-center space-x-2 bg-[#161616] text-[#ffe243] hover:bg-[#606060] hover:text-[#fff] cursor-pointer px-4 py-2 rounded-lg transition-colors ${
         isLoading ? "opacity-50 cursor-not-allowed" : ""
       }`}
     >

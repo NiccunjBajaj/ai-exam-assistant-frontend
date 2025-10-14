@@ -1,10 +1,11 @@
 import "./globals.css";
 import Menu from "./components/Menu";
 import MouseFollower from "./components/MouseFollower";
+import { AuthProvider } from "./components/AuthContext";
 
 export const metadata = {
   title: "Learnee",
-  description: "Buzz through your exams with AI 🐝",
+  description: "AI-Powered Exam Assistant",
   icons: {
     icon: [
       { url: "/favicon.png", sizes: "image/png" },
@@ -20,11 +21,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="no-scrollbar">
-        {/* <MouseFollower /> */}
-        <div className="z-[10000]">
-          <Menu />
-        </div>
-        {children}
+        <AuthProvider>
+          {/* <MouseFollower /> */}
+          <div className="z-[10000]">
+            <Menu />
+          </div>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

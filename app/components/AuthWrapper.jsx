@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "./AuthContext";
 
 export default function AuthWrapper({ children }) {
+  const { isLoggedIn } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
-      const from = pathname;
-      router.push(`/login?from=${from}`);
+      router.push(`/login?from=${pathname}`);
     }
-  }, [pathname, router]);
+  }, [isLoggedIn, pathname, router]);
 
-  return <>{children}</>;
+  return <>{isLoggedIn && children}</>;
 }

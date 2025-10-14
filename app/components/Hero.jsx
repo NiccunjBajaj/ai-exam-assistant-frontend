@@ -4,6 +4,8 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Flip } from "gsap/Flip";
+import AnimatedCopy from "./AnimatedCopy";
+import { useAuth } from "./AuthContext";
 
 if (!gsap.core.globals().ScrollTrigger) {
   gsap.registerPlugin(ScrollTrigger, Flip);
@@ -18,7 +20,7 @@ const Card = ({ title, span, copy, index }) => {
             {title}
             <span>{span}</span>
           </h1>
-          <p className="text-[1.3vw] font-[500]">{copy}</p>
+          <p className="text-[1.5vw] font-[500] mt-[1vw]">{copy}</p>
         </div>
         <div className="card-img flex-1 aspect-[16/9] rounded-[1.2vw] overflow-hidden">
           <img
@@ -34,6 +36,7 @@ const Card = ({ title, span, copy, index }) => {
 
 const Hero = () => {
   const containerRef = useRef();
+  const { isLoggedIn, logout } = useAuth();
 
   const cards = [
     {
@@ -115,7 +118,6 @@ const Hero = () => {
     });
     gsap.to(".word", {
       scale: 1,
-      rotate: 1,
       duration: 0.7,
       stagger: 0.1,
       ease: "bounce.out",
@@ -126,18 +128,17 @@ const Hero = () => {
       duration: 1.2,
       ease: "expo",
     });
-    gsap.to(".spline", {
-      x: 0,
-      delay: 1,
-      duration: 1.2,
-      ease: "expo",
-    });
     gsap.to(".text", {
       y: 0,
       duration: 0.8,
       stagger: 0.05,
       ease: "expo",
       delay: 0.3,
+    });
+    gsap.to(".cta", {
+      scale: 1,
+      duration: 0.7,
+      ease: "bounce.out",
     });
 
     if (typeof window === "undefined") return;
@@ -183,6 +184,182 @@ const Hero = () => {
       });
     }
 
+    const features = document.querySelectorAll(".feature");
+    const featureBg = document.querySelectorAll(".feature-bg");
+
+    const featureStartPosition = [
+      { top: 25, left: 30 }, //ChatBot
+      { top: 80, left: 70 }, // Learn
+      { top: 50, left: 75 }, //Notes
+      { top: 25, left: 72.5 }, // Flashcards
+      { top: 50, left: 25 }, // Revise
+      { top: 80, left: 30 }, // Test
+    ];
+
+    features.forEach((feature, index) => {
+      const featurePos = featureStartPosition[index];
+      gsap.set(feature, {
+        top: `${featurePos.top}%`,
+        left: `${featurePos.left}%`,
+      });
+    });
+
+    const featuresStartDimensions = [];
+    featureBg.forEach((bbg) => {
+      const rect = bbg.getBoundingClientRect();
+      featuresStartDimensions.push({
+        width: rect.width,
+        heigth: rect.height,
+      });
+    });
+
+    const remInPixels = parseFloat(
+      getComputedStyle(document.documentElement).fontSize
+    );
+    const targerWidth = 3 * remInPixels;
+    const targerHeight = 3 * remInPixels;
+
+    const getSearchBarFinalWidth = () => {
+      return window.innerWidth < 1000 ? 20 : 25;
+    };
+
+    let searchBarFinalWidth = getSearchBarFinalWidth();
+
+    window.addEventListener("resize", () => {
+      searchBarFinalWidth = getSearchBarFinalWidth();
+      ScrollTrigger.refresh();
+    });
+
+    ScrollTrigger.create({
+      trigger: ".spotlight",
+      start: "start",
+      end: `+=${window.innerHeight * 3}px`,
+      pin: true,
+      scrub: 1,
+      onUpdate: (self) => {
+        const progress = self.progress;
+
+        if (progress <= 0.3333) {
+          const spotlightHeaderProgress = progress / 0.3333;
+          gsap.set(".spotlight-content", {
+            y: `${-100 * spotlightHeaderProgress}%`,
+          });
+        } else {
+          gsap.set(".spotlight-content", {
+            y: "-100%",
+          });
+        }
+        if (progress >= 0 && progress <= 0.5) {
+          const featureProgress = progress / 0.5;
+          features.forEach((feature, index) => {
+            const original = featureStartPosition[index];
+            const currentTop =
+              original.top + (50 - original.top) * featureProgress;
+            const currentLeft =
+              original.left + (50 - original.left) * featureProgress;
+
+            gsap.set(feature, {
+              top: `${currentTop}%`,
+              left: `${currentLeft}%`,
+            });
+          });
+
+          featureBg.forEach((bg, index) => {
+            const featureDim = featuresStartDimensions[index];
+            const currentWidth =
+              featureDim.width +
+              (targerWidth - featureDim.width) * featureProgress;
+            const currentHeight =
+              featureDim.height +
+              (targerHeight - featureDim.height) * featureProgress;
+            const currentBorderRadius = 10 + (25 - 10) * featureProgress;
+
+            gsap.set(bg, {
+              width: `${currentWidth}px`,
+              height: `${currentHeight}px`,
+              borderRadius: `${currentBorderRadius}`,
+            });
+          });
+
+          if (progress >= 0 && progress <= 0.1) {
+            const featureTextProgress = progress / 0.1;
+            gsap.set(".feature-content", {
+              opacity: 1 - featureTextProgress,
+            });
+          } else if (progress > 0.1) {
+            gsap.set(".feature-content", {
+              opacity: 0,
+            });
+          }
+        }
+
+        if (progress >= 0.5) {
+          gsap.set(".features", {
+            opacity: 0,
+          });
+        } else {
+          gsap.set(".features", {
+            opacity: 1,
+          });
+        }
+
+        if (progress >= 0.5) {
+          gsap.set(".search-bar", {
+            opacity: 1,
+          });
+        } else {
+          gsap.set(".search-bar", {
+            opacity: 0,
+          });
+        }
+
+        if (progress >= 0.5 && progress <= 0.75) {
+          const searchBarProgress = (progress - 0.5) / 0.25;
+
+          const width = 3 + (searchBarFinalWidth - 3) * searchBarProgress;
+          const height = 3 + (5 - 3) * searchBarProgress;
+
+          const translateY = -50 + (200 - -50) * searchBarProgress;
+
+          gsap.set(".search-bar", {
+            width: `${width}rem`,
+            height: `${height}rem`,
+            transform: `translate(-50%, ${translateY}%)`,
+          });
+
+          gsap.set(".search-bar p", {
+            opacity: 0,
+          });
+        } else if (progress > 0.75) {
+          gsap.set(".search-bar", {
+            width: `${searchBarFinalWidth}rem`,
+            height: " 5rem",
+            transform: "translate(-50%, 200%)",
+          });
+        }
+
+        if (progress >= 0.75) {
+          const finalHeaderProgress = (progress - 0.75) / 0.25;
+
+          gsap.set(".search-bar p", {
+            opacity: finalHeaderProgress,
+          });
+          gsap.set(".header-content", {
+            y: -50 + 50 * finalHeaderProgress,
+            opacity: finalHeaderProgress,
+          });
+        } else {
+          gsap.set(".search-bar p", {
+            opacity: 0,
+          });
+          gsap.set(".header-content", {
+            y: -50,
+            opacity: 0,
+          });
+        }
+      },
+    });
+
     return () => {
       ScrollTrigger.getAll().forEach((t) => t.kill());
     };
@@ -197,7 +374,7 @@ const Hero = () => {
             src="/bg.png"
             alt="heroimage"
           /> */}
-          <div className="overflow-hidden flex flex-col gap-7 h-full justify-center">
+          <div className="overflow-hidden flex flex-col gap-7 h-full justify-center items-center">
             <div className="w-full flex flex-col justify-center px-10">
               <h1 className="leading-[11vw] font-[federo] noselect flex flex-col justify-center items-center">
                 <div className="text-[20vw] flex">
@@ -220,6 +397,16 @@ const Hero = () => {
                   </div>
                 </div>
               </h1>
+              {isLoggedIn ? (
+                ""
+              ) : (
+                <a
+                  className="bg-[#ffe243] text-[#161616] hover:bg-[#606060] hover:text-[#fff] w-fit p-[0.4vw] px-[1vw] text-[1.5vw]  rounded-4xl mx-auto mt-[2vw] cta transition-all duration-[0.2s] scale-0"
+                  href="/login"
+                >
+                  Get Started
+                </a>
+              )}
             </div>
           </div>
         </section>
@@ -263,7 +450,7 @@ const Hero = () => {
         </div>
       </section>
       <div ref={containerRef}>
-        <section className="intro services-copy relative mt-[155svh] pt-[2rem] pr-[2rem] pb-[25svh] pl-[2rem] text-center bg-[#fff] rounded-t-[4vw] flex flex-col items-center gap-[2vw]">
+        <section className="intro services-copy relative mt-[155svh] pt-[3vw] pr-[3vw] pb-[25svh] pl-[3vw] text-center bg-[#fff] rounded-t-[4vw] flex flex-col items-center gap-[2vw]">
           <h1 className="animate-text heading font-[jost]">
             Generate concise notes, and create flashcards for quick revision,
             making studying more personalized, efficient, and engaging.
@@ -277,19 +464,108 @@ const Hero = () => {
         </section>
         <section className="cards">
           {cards.map((card, index) => (
-            <Card
-              key={index}
-              {...card}
-              index={index}
-              containerRef={containerRef}
-            />
+            <Card key={index} {...card} index={index} />
           ))}
         </section>
-        <footer className="outro relative w-screen h-screen p-[3vw] bg-[#161616]">
-          <h1 className="text-[5vw] font-[600] leading-[1] mb-[3vw]">
-            Leanree
+        <section className="outro relative w-screen h-[100svh] overflow-hidden flex flex-col items-center justify-center p-[3vw] bg-[#161616]">
+          <h1 className="text-[20vw] font-[600] leading-[1] text-center">
+            L<span className="text-[#ffe243]">e</span>arn
+            <span className="text-[#ffe243]">ee</span>
           </h1>
+          <AnimatedCopy>
+            <p className="text-[2vw] w-[60%]">
+              Learnee is an AI-powered exam assistant that helps students
+              prepare smarter with instant answers, auto-generated notes,
+              flashcards, and personalized study tools — all in one platform.
+            </p>
+          </AnimatedCopy>
+        </section>
+
+        <section className="spotlight relative w-full h-[100svh] overflow-hidden">
+          <div className="spotlight-content absolute w-full h-full flex justify-center items-center will-change-transform">
+            <div className="spotlight-bg absolute scale-[0.58]">
+              <img
+                className="w-full h-full object-cover"
+                src="/chats.png"
+                alt=""
+              />
+            </div>
+          </div>
+          <div className="header absolute w-full h-full flex justify-center items-center will-change-transform ">
+            <div className="header-content w-[60%] flex flex-col items-center text-center gap-[3vw] will-change-transform will-change-opacity translate-y-[-100px] opacity-0 mb-[2vw]">
+              <h1 className="text-[5vw] font-[600] leading-[1] text-center">
+                Find the answers with{" "}
+                <span className="text-[#ffe243]">Proff</span>
+                <span>'</span>
+                <span className="text-[#ffe243]">s</span> assistance
+              </h1>
+              <p>
+                Seek the answers you couldn't find — structures the ones you
+                already know.
+              </p>
+            </div>
+          </div>
+
+          <div className="features">
+            <div className="feature">
+              <div className="feature-bg"></div>
+              <div className="feature-content">
+                <p>ChatBot</p>
+              </div>
+            </div>
+            <div className="feature">
+              <div className="feature-bg"></div>
+              <div className="feature-content">
+                <p>Learn</p>
+              </div>
+            </div>
+            <div className="feature">
+              <div className="feature-bg"></div>
+              <div className="feature-content">
+                <p>Notes</p>
+              </div>
+            </div>
+            <div className="feature">
+              <div className="feature-bg"></div>
+              <div className="feature-content">
+                <p>Flashcards</p>
+              </div>
+            </div>
+            <div className="feature">
+              <div className="feature-bg"></div>
+              <div className="feature-content">
+                <p>Revise</p>
+              </div>
+            </div>
+            <div className="feature">
+              <div className="feature-bg"></div>
+              <div className="feature-content">
+                <p>Test</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="search-bar absolute top-[50%] left-[50%] translate-x-[-50%] ranslate-y-[-50%] w-[4vw] h-[4vw] bg-[#f6dd4d] rounded-4xl opacity-0 flex items-center will-change-transform will-change-opacity will-change-width will-change-height hover:bg-[#606060] cursor-pointer">
+            <a href="/chat" className="flex justify-center w-full">
+              <p className="text-[#161616] relative opacity-0 will-change-opacity">
+                Ask Proff
+              </p>
+            </a>
+          </div>
+        </section>
+
+        <footer className="outro relative overflow-hidden flex rounded-t-4xl bg-[#fff]">
+          <div className="w-[30vw] h-[30vw] bg-[url('/bee.svg')] bg-no-repeat bg-contain bg-center"></div>
+          <h1 className="text-[15vw] text-[#161616] font-[600] leading-[1]">
+            L<span className="text-[#ffe343d3]">e</span>anr
+            <span className="text-[#ffe343d3]">ee</span>
+          </h1>
+          <h1 className="text-[#161616] lowercase">space</h1>
         </footer>
+
+        {/* <footer className="outro relative w-screen h-screen p-[3vw] bg-[#161616]">
+          <h1 className="text-[5vw] font-[600] leading-[1] mb-[0]">Leanree</h1>
+        </footer> */}
 
         {/* <footer className="select font-[mouse] rounded-t-[4vw] bg-[#fff] w-[100vw] h-screen text-[#161616] flex flex-col justify-between items-center p-[2vw]">
         <h1 className="text-[8vw] uppercase leading-[4vw]">
