@@ -36,7 +36,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("access_token");
     setIsLoggedIn(false);
     setUser(null);
-    router.push("/login");
+    router.push("/");
+    router.refresh();
   };
 
   return (
