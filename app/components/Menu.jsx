@@ -19,8 +19,8 @@ const navLinks = [
   { href: "/", label: "HOME", data: "home", icon: <HomeIcon size={130} /> },
   {
     href: "/chat",
-    label: "ASTRA",
-    data: "astra",
+    label: "PROFF",
+    data: "proff",
     icon: <BotIcon size={130} />,
   },
   {
@@ -116,6 +116,14 @@ const Menu = () => {
     });
   });
 
+  const handleLogout = () => {
+    const confirmed = window.confirm("Are you sure you want to log out?");
+    if (confirmed) {
+      logout();
+      window.location.reload(); // 🔄 full UI reset after logout
+    }
+  };
+
   if (pathname === "/login" || pathname === "/register") return null;
 
   return (
@@ -137,7 +145,7 @@ const Menu = () => {
           {isLoggedIn ? (
             <button
               className="cursor-pointer bg-[#606060] font-[400] text-[#161616] hover:bg-red-500 hover:text-[#fff] px-[0.5vw] rounded-3xl text-[1.2vw]"
-              onClick={logout}
+              onClick={handleLogout}
             >
               Logout
             </button>

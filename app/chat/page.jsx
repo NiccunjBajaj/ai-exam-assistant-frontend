@@ -486,9 +486,9 @@ import ChatContent from "../components/ChatPage";
 export default function ChatPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <AuthWrapper>
-        <ChatContent />
-      </AuthWrapper>
+      {/* <AuthWrapper> */}
+      <ChatContent />
+      {/* </AuthWrapper> */}
     </Suspense>
   );
 }

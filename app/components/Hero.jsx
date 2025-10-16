@@ -36,7 +36,7 @@ const Card = ({ title, span, copy, index }) => {
 
 const Hero = () => {
   const containerRef = useRef();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn } = useAuth();
 
   const cards = [
     {

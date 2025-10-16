@@ -12,6 +12,9 @@ export function AuthProvider({ children }) {
 
   // Check if a token exists in localStorage on load
   useEffect(() => {
+    checkLogin();
+  }, []);
+  const checkLogin = () => {
     const token = localStorage.getItem("access_token");
     if (token) {
       setIsLoggedIn(true);
@@ -24,7 +27,7 @@ export function AuthProvider({ children }) {
         setUser(null);
       }
     }
-  }, []);
+  };
 
   const login = (token, userData) => {
     localStorage.setItem("access_token", token);

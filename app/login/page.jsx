@@ -24,6 +24,10 @@ export default function LoginRegisterPage() {
     confirmPassword: "",
   });
 
+  // Forgot Password form
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+
   // Auto-redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -43,19 +47,19 @@ export default function LoginRegisterPage() {
     verifyToken();
   }, []);
 
-  // Handle login
+  // ---------------- Handlers ----------------
+
+  // Login
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-
     try {
       const res = await fetch(`${BACKEND_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginData),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Login failed");
 
@@ -68,11 +72,10 @@ export default function LoginRegisterPage() {
     }
   };
 
-  // Handle register
+  // Register
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
-
     if (registerData.password.length < 6)
       return setError("Password must be at least 6 characters long");
     if (registerData.password !== registerData.confirmPassword)
@@ -118,12 +121,35 @@ export default function LoginRegisterPage() {
     }
   };
 
+  // Forgot Password
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      const data = await res.json();
+      alert(data.message);
+      setShowForgot(false);
+      setForgotEmail("");
+    } catch (err) {
+      setError("Something went wrong, please try again.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ---------------- UI ----------------
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#161616] px-4">
       <div className="flex w-[70vw] justify-center max-w-5xl h-[70vh] relative overflow-hidden rounded-3xl shadow-lg">
         <AnimatePresence mode="wait">
           {isLogin ? (
-            // ---------------- LOGIN PANEL ----------------
             <motion.div
               key="login"
               initial={{ width: "65%", opacity: 0 }}
@@ -139,56 +165,96 @@ export default function LoginRegisterPage() {
                 </div>
               )}
 
-              <form onSubmit={handleLogin} className="space-y-4">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={loginData.email}
-                  onChange={(e) =>
-                    setLoginData({ ...loginData, email: e.target.value })
-                  }
-                  required
-                  className="w-full px-4 py-2 rounded bg-[#606060] outline-none"
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={loginData.password}
-                  onChange={(e) =>
-                    setLoginData({ ...loginData, password: e.target.value })
-                  }
-                  required
-                  className="w-full px-4 py-2 rounded bg-[#606060] outline-none"
-                />
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`w-full bg-[#606060] hover:bg-[#ffe243] hover:text-[#161616] text-white py-2 rounded font-semibold transition-all ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+              {showForgot ? (
+                // -------- Forgot Password Form --------
+                <form
+                  onSubmit={handleForgotPassword}
+                  className="space-y-4 flex flex-col"
                 >
-                  {isLoading ? "Logging in..." : "Login"}
-                </button>
-              </form>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 rounded bg-[#606060] outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full bg-[#606060] hover:bg-[#ffe243] hover:text-[#161616] text-white py-2 rounded font-semibold"
+                  >
+                    Send Reset Link
+                  </button>
+                  <p
+                    className="text-sm text-[#ffe243] mt-2 cursor-pointer underline"
+                    onClick={() => setShowForgot(false)}
+                  >
+                    Back to login
+                  </p>
+                </form>
+              ) : (
+                // -------- Login Form --------
+                <>
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={loginData.email}
+                      onChange={(e) =>
+                        setLoginData({ ...loginData, email: e.target.value })
+                      }
+                      required
+                      className="w-full px-4 py-2 rounded bg-[#606060] outline-none"
+                    />
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={loginData.password}
+                      onChange={(e) =>
+                        setLoginData({ ...loginData, password: e.target.value })
+                      }
+                      required
+                      className="w-full px-4 py-2 rounded bg-[#606060] outline-none"
+                    />
+                    <div className="flex justify-between items-center mt-2">
+                      <span
+                        className="text-sm text-[#ffe243] cursor-pointer underline"
+                        onClick={() => setShowForgot(true)}
+                      >
+                        Forgot Password?
+                      </span>
+                    </div>
 
-              <div className="my-4 text-center text-[#ffe243]">or</div>
-              <div className="mx-auto w-fit">
-                <GoogleLoginButton />
-              </div>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className={`w-full bg-[#606060] hover:bg-[#ffe243] hover:text-[#161616] text-white py-2 rounded font-semibold transition-all ${
+                        isLoading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      {isLoading ? "Logging in..." : "Login"}
+                    </button>
+                  </form>
 
-              <p className="text-center text-sm mt-4 text-[#ffe243]">
-                Don’t have an account?{" "}
-                <span
-                  onClick={() => setIsLogin(false)}
-                  className="cursor-pointer underline"
-                >
-                  Sign up
-                </span>
-              </p>
+                  <div className="my-4 text-center text-[#ffe243]">or</div>
+                  <div className="mx-auto w-fit">
+                    <GoogleLoginButton />
+                  </div>
+
+                  <p className="text-center text-sm mt-4 text-[#ffe243]">
+                    Don’t have an account?{" "}
+                    <span
+                      onClick={() => setIsLogin(false)}
+                      className="cursor-pointer underline"
+                    >
+                      Sign up
+                    </span>
+                  </p>
+                </>
+              )}
             </motion.div>
           ) : (
-            // ---------------- SIGNUP PANEL ----------------
+            // -------- Sign Up Form (unchanged) --------
             <motion.div
               key="signup"
               initial={{ width: "35%", opacity: 0 }}
@@ -200,7 +266,6 @@ export default function LoginRegisterPage() {
               <h1 className="text-[2.5vw] font-semibold mb-[1vw]">
                 Create Account
               </h1>
-
               {error && (
                 <div className="bg-red-600/30 text-[#161616] px-4 py-2 rounded mb-3 text-sm">
                   {error}
@@ -226,10 +291,7 @@ export default function LoginRegisterPage() {
                   placeholder="Email"
                   value={registerData.email}
                   onChange={(e) =>
-                    setRegisterData({
-                      ...registerData,
-                      email: e.target.value,
-                    })
+                    setRegisterData({ ...registerData, email: e.target.value })
                   }
                   required
                   className="w-full px-4 py-2 rounded bg-[#fff] outline-none"
