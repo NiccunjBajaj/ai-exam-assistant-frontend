@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { v4 as uuidv4 } from "uuid";
 import AuthWrapper from "../components/AuthWrapper";
 import FileUploadArea from "../components/FileUploader";
 import CustomDropdown from "../components/CustomDropdown";
@@ -13,12 +12,10 @@ import { PencilLine, SquarePen, Trash2Icon } from "lucide-react";
 
 function ChatContent() {
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
   const router = useRouter();
 
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [isSearched, setIsSearched] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [showSidebar, setShowSidebar] = useState(true);
@@ -34,15 +31,6 @@ function ChatContent() {
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  const startNewChat = () => {
-    const newId = uuidv4();
-    setSessionId(newId);
-    setShowSidebar(true);
-    localStorage.setItem("current_session_id", newId);
-    setMessages([]);
-    fileUploaderRef.current?.clearFile();
-  };
-
   const autoBoldKeywords = (text) =>
     text.replace(/\b(important|note|tip)\b/gi, "**$1**");
 
@@ -55,7 +43,6 @@ function ChatContent() {
           setSearchResults([]);
           return;
         }
-
         const results = pastSessions.filter((session) =>
           session.title.toLowerCase().includes(q.toLowerCase())
         );
@@ -69,6 +56,7 @@ function ChatContent() {
     return () => debouncedSearch.cancel();
   }, [query, debouncedSearch]);
 
+  // Rename session
   const handleRename = async (id) => {
     const newTitle = prompt("Enter new chat name:");
     if (!newTitle?.trim()) return;
@@ -83,7 +71,6 @@ function ChatContent() {
         },
         body: JSON.stringify({ title: newTitle }),
       });
-
       if (!res.ok) throw new Error("Rename failed");
 
       setPastSessions((prev) =>
@@ -94,6 +81,7 @@ function ChatContent() {
     }
   };
 
+  // Delete session
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this chat?")) return;
 
@@ -103,7 +91,6 @@ function ChatContent() {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (!res.ok) throw new Error("Delete failed");
 
       setPastSessions((prev) => prev.filter((s) => s.id !== id));
@@ -116,22 +103,7 @@ function ChatContent() {
     }
   };
 
-  useEffect(() => {
-    const stored = localStorage.getItem("current_session_id");
-    const id = stored || uuidv4();
-    if (!stored) localStorage.setItem("current_session_id", id);
-    setSessionId(id);
-  }, []);
-
-  useEffect(scrollToBottom, [messages]);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [input]);
-
+  // Fetch user sessions
   useEffect(() => {
     const fetchSessions = async () => {
       try {
@@ -147,25 +119,20 @@ function ChatContent() {
     fetchSessions();
   }, []);
 
+  // Auto resize textarea
   useEffect(() => {
-    const prevent = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-    window.addEventListener("dragover", prevent);
-    window.addEventListener("drop", prevent);
-    return () => {
-      window.removeEventListener("dragover", prevent);
-      window.removeEventListener("drop", prevent);
-    };
-  }, []);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
 
+  // Fetch messages for current session
   useEffect(() => {
     if (!sessionId) return;
 
     const fetchMessages = async () => {
       try {
-        console.log(BACKEND_URL);
         const token = localStorage.getItem("access_token");
         const res = await fetch(`${BACKEND_URL}/messages/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -183,20 +150,45 @@ function ChatContent() {
     fetchMessages();
   }, [sessionId]);
 
+  const startNewChat = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return router.push("/login");
+
+    const title =
+      prompt("📝 Name your new chat")?.trim() ||
+      `Chat on ${new Date().toLocaleString()}`;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/create-session`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title }),
+      });
+      const data = await res.json();
+      setSessionId(data.session_id);
+      setMessages([]);
+      fileUploaderRef.current?.clearFile();
+      setShowSidebar(true);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to create new chat");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading || !sessionId) return;
 
     const token = localStorage.getItem("access_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+    if (!token) return router.push("/login");
 
     const fileName = fileUploaderRef.current?.getFileName();
 
     const userMessage = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       content: input,
       role: "user",
       timestamp: new Date(),
@@ -208,24 +200,6 @@ function ChatContent() {
     setError("");
 
     try {
-      const sesOk = await fetch(`${BACKEND_URL}/session-exists/${sessionId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }).then((r) => r.json());
-
-      if (!sesOk.exists) {
-        const title =
-          prompt("📝 Name your new chat")?.trim() ||
-          `Chat on ${new Date().toLocaleString()}`;
-        await fetch(`${BACKEND_URL}/create-session`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ session_id: sessionId, title }),
-        });
-      }
-
       const res = await fetch(`${BACKEND_URL}/chat`, {
         method: "POST",
         headers: {
@@ -245,7 +219,7 @@ function ChatContent() {
       setMessages((prev) => [
         ...prev,
         {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           content: data.response,
           role: "bot",
           timestamp: new Date(),
@@ -263,6 +237,8 @@ function ChatContent() {
     setSessionId(id);
     setShowSidebar(true);
   };
+
+  useEffect(scrollToBottom, [messages]);
 
   return (
     <main className="min-h-screen flex bg-[#161616] select noto">
