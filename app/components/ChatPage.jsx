@@ -156,6 +156,10 @@ function ChatContent() {
     setSessionId(null);
     setMessages([]);
     fileUploaderRef.current?.clearFile();
+    setPastSessions((prev) => [
+      draftChat,
+      ...prev.filter((s) => s.id !== "draft"),
+    ]);
     setShowSidebar(true);
   };
 
@@ -209,7 +213,11 @@ function ChatContent() {
 
     try {
       const res = await fetch(`${BACKEND_URL}/chat`, {
-        // ... (fetch options)
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           session_id: sessionId,
           user_input: userMessage.content, // Use content from the message object
