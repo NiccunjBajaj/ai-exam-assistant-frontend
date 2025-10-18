@@ -428,6 +428,12 @@ function ChatContent() {
               <div className="flex items-center justify-center">
                 <form
                   onSubmit={handleSubmit}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && e.shiftKey === false) {
+                      e.preventDefault();
+                      handleSubmit(e);
+                    }
+                  }}
                   className="bg-[#121212] p-2 rounded-xl mb-6 w-1/2"
                 >
                   <div className="flex flex-col gap-5 items-center justify-center">
@@ -455,7 +461,7 @@ function ChatContent() {
                           disabled={isLoading || !input.trim()}
                           className="px-6 py-2 bg-transparent text-[#ffe243] rounded-lg font-semibold transition-opacity disabled:opacity-50"
                         >
-                          Send
+                          {isLoading ? "*" : "Send"}
                         </button>
                       </div>
                     </div>
