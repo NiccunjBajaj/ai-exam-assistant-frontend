@@ -156,10 +156,6 @@ function ChatContent() {
     setSessionId(null);
     setMessages([]);
     fileUploaderRef.current?.clearFile();
-    setPastSessions((prev) => [
-      draftChat,
-      ...prev.filter((s) => s.id !== "draft"),
-    ]);
     setShowSidebar(true);
   };
 
