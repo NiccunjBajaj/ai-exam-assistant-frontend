@@ -156,10 +156,6 @@ function ChatContent() {
     setSessionId(null);
     setMessages([]);
     fileUploaderRef.current?.clearFile();
-    setPastSessions((prev) => [
-      draftChat,
-      ...prev.filter((s) => s.id !== "draft"),
-    ]);
     setShowSidebar(true);
   };
 
@@ -198,79 +194,58 @@ function ChatContent() {
     const token = localStorage.getItem("access_token");
     if (!token) return router.push("/login");
 
+    const userMessage = {
+      id: crypto.randomUUID(),
+      content: input,
+      role: "user",
+      timestamp: new Date(),
+    };
+
+    // 1. Optimistically update the UI with the user's message
+    setMessages((prev) => [...prev, userMessage]);
+    setInput(""); // 2. Clear the input right away
     setIsLoading(true);
     setError("");
 
     try {
-      let activeSessionId = sessionId;
-
-      // ✅ If it's a brand new chat, create session on first prompt
-      if (!activeSessionId) {
-        const title =
-          prompt("📝 Name your new chat")?.trim() ||
-          `Chat on ${new Date().toLocaleString()}`;
-        const res = await fetch(`${BACKEND_URL}/create-session`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ title }),
-        });
-        const data = await res.json();
-        activeSessionId = data.session_id;
-        setSessionId(activeSessionId);
-
-        // Optionally add to sidebar list
-        setPastSessions((prev) => {
-          const filtered = prev.filter((s) => s.id !== "draft");
-          return [
-            {
-              id: activeSessionId,
-              title,
-              created_at: new Date().toISOString(),
-            },
-            ...filtered,
-          ];
-        });
-      }
-
-      const userMessage = {
-        id: crypto.randomUUID(),
-        content: input,
-        role: "user",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, userMessage]);
-      setInput("");
-
       const res = await fetch(`${BACKEND_URL}/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        // ... (fetch options)
         body: JSON.stringify({
-          session_id: activeSessionId,
-          user_input: input,
+          session_id: sessionId,
+          user_input: userMessage.content, // Use content from the message object
           marks,
         }),
       });
 
-      if (!res.ok) throw new Error("AI request failed");
+      if (!res.ok) throw new Error("Failed to get AI response");
       const data = await res.json();
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          content: data.response,
-          role: "bot",
-          timestamp: new Date(),
-        },
-      ]);
+      const botMessage = {
+        id: crypto.randomUUID(),
+        content: data.response,
+        role: "bot",
+        timestamp: new Date(),
+      };
+
+      // If a new session was created, update state
+      if (!sessionId && data.session_id) {
+        setSessionId(data.session_id);
+        setPastSessions((prev) => [
+          {
+            id: data.session_id,
+            title: data.title || input.slice(0, 50),
+            created_at: data.created_at || new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+      }
+
+      // 3. Only add the bot's message when it arrives
+      setMessages((prev) => [...prev, botMessage]);
     } catch (err) {
       setError(err.message);
+      // Optional: Add logic to show the user's message failed to send
+      setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
     } finally {
       setIsLoading(false);
       fileUploaderRef.current?.clearFile();
