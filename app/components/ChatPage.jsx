@@ -105,19 +105,20 @@ function ChatContent() {
 
   // Fetch user sessions
   useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const token = localStorage.getItem("access_token");
-        const res = await fetch(`${BACKEND_URL}/sessions`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setPastSessions(await res.json());
-      } catch (err) {
-        console.error("Failed to fetch sessions", err);
-      }
-    };
     fetchSessions();
   }, []);
+
+  const fetchSessions = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(`${BACKEND_URL}/sessions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPastSessions(await res.json());
+    } catch (err) {
+      console.error("Failed to fetch sessions", err);
+    }
+  };
 
   // Auto resize textarea
   useEffect(() => {
@@ -150,56 +151,99 @@ function ChatContent() {
     fetchMessages();
   }, [sessionId]);
 
-  const startNewChat = async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return router.push("/login");
-
-    const title =
-      prompt("📝 Name your new chat")?.trim() ||
-      `Chat on ${new Date().toLocaleString()}`;
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/create-session`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ title }),
-      });
-      const data = await res.json();
-      setSessionId(data.session_id);
-      setMessages([]);
-      fileUploaderRef.current?.clearFile();
-      setShowSidebar(true);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to create new chat");
-    }
+  const startNewChat = () => {
+    // Just clear current session — don't create it in backend yet
+    setSessionId(null);
+    setMessages([]);
+    fileUploaderRef.current?.clearFile();
+    setPastSessions((prev) => [
+      draftChat,
+      ...prev.filter((s) => s.id !== "draft"),
+    ]);
+    setShowSidebar(true);
   };
+
+  // const startNewChat = async () => {
+  //   const token = localStorage.getItem("access_token");
+  //   if (!token) return router.push("/login");
+
+  // const title =
+  //   prompt("📝 Name your new chat")?.trim() ||
+  //   `Chat on ${new Date().toLocaleString()}`;
+
+  //   try {
+  //     const res = await fetch(`${BACKEND_URL}/create-session`, {
+  //       method: "POST",
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ title }),
+  //     });
+  //     const data = await res.json();
+  //     setSessionId(data.session_id);
+  //     setMessages([]);
+  //     fileUploaderRef.current?.clearFile();
+  //     setShowSidebar(true);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setError("Failed to create new chat");
+  //   }
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!input.trim() || isLoading || !sessionId) return;
+    if (!input.trim() || isLoading) return;
 
     const token = localStorage.getItem("access_token");
     if (!token) return router.push("/login");
 
-    const fileName = fileUploaderRef.current?.getFileName();
-
-    const userMessage = {
-      id: crypto.randomUUID(),
-      content: input,
-      role: "user",
-      timestamp: new Date(),
-      ...(fileName ? { file: fileName } : {}),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
     setIsLoading(true);
     setError("");
 
     try {
+      let activeSessionId = sessionId;
+
+      // ✅ If it's a brand new chat, create session on first prompt
+      if (!activeSessionId) {
+        const title =
+          prompt("📝 Name your new chat")?.trim() ||
+          `Chat on ${new Date().toLocaleString()}`;
+        const res = await fetch(`${BACKEND_URL}/create-session`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ title }),
+        });
+        const data = await res.json();
+        activeSessionId = data.session_id;
+        setSessionId(activeSessionId);
+
+        // Optionally add to sidebar list
+        setPastSessions((prev) => {
+          const filtered = prev.filter((s) => s.id !== "draft");
+          return [
+            {
+              id: activeSessionId,
+              title,
+              created_at: new Date().toISOString(),
+            },
+            ...filtered,
+          ];
+        });
+      }
+
+      const userMessage = {
+        id: crypto.randomUUID(),
+        content: input,
+        role: "user",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      setInput("");
+
       const res = await fetch(`${BACKEND_URL}/chat`, {
         method: "POST",
         headers: {
@@ -207,7 +251,7 @@ function ChatContent() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          session_id: sessionId,
+          session_id: activeSessionId,
           user_input: input,
           marks,
         }),
