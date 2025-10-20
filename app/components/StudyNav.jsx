@@ -1,6 +1,6 @@
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { HomeIcon } from "lucide-react";
+import { HomeIcon, LibraryBig } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -25,7 +25,7 @@ const StudyNav = () => {
           className="text-[1.4vw] flex items-center gap-[0.3vw]"
           href="/study"
         >
-          Study <HomeIcon />
+          Study <LibraryBig />
         </Link>
       </div>
       {navLinks.map((link, i) => (

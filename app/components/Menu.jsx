@@ -54,6 +54,10 @@ const Menu = () => {
   const tl = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const isStudySubRoute = pathname.startsWith("/study/");
+  const isChatRoute = pathname.startsWith("/chat");
+  const shouldShowLogo = !isStudySubRoute && !isChatRoute;
+
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   useGSAP(
@@ -131,17 +135,25 @@ const Menu = () => {
       className="menu-container font-[crushed] select z-[99999]"
       ref={menuRef}
     >
-      <div className="menu-bar fixed top-[0] right-[0] w-screen z-[1] flex items-center justify-between font-[200]">
+      <div
+        className={`menu-bar fixed top-[0] right-[0] ${
+          shouldShowLogo ? "w-screen" : "w-fit"
+        } z-[1] flex items-center justify-between font-[200]`}
+      >
         <div className="overflow-hidden">
-          <div className="image w-[8vw] translate-x-[-100%]">
-            <img
-              className="w-full h-full object-cover"
-              src="/logo.svg"
-              alt="logo"
-            />
-          </div>
+          {shouldShowLogo && (
+            <div className="image w-[8vw] translate-x-[-100%]">
+              <a href="/">
+                <img
+                  className="w-full h-full object-cover"
+                  src="/logo.svg"
+                  alt="logo"
+                />
+              </a>
+            </div>
+          )}
         </div>
-        <div className="flex gap-[2vw]">
+        <div className={`flex gap-[2vw] ${shouldShowLogo ? "" : "py-[1.2vw]"}`}>
           {isLoggedIn ? (
             <button
               className="cursor-pointer bg-[#606060] font-[400] text-[#161616] hover:bg-red-500 hover:text-[#fff] px-[0.5vw] rounded-3xl text-[1.2vw]"

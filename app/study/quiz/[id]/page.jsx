@@ -153,7 +153,7 @@ export default function QuizPage() {
       </div> */}
       <div className="absolute top-[1vw] left-[2vw] bg-[#ffe243] hover:bg-[#606060] text-[#161616] rounded-[1vw] cursor-pointer">
         <Link
-          href="/study/notes"
+          href="/study/quiz"
           className="text-[1.2vw] px-[0.5vw] flex items-center"
         >
           <ArrowLeft />

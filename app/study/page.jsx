@@ -52,7 +52,7 @@ export default function StudyPage() {
         <Spline scene="https://prod.spline.design/7mYxTZR1HE7uxNny/scene.splinecode" />
       </div> */}
       <main
-        className="h-screen bg-[#0000007c] backdrop-blur-[3px] select"
+        className="h-screen bg-[#161616] backdrop-blur-[3px] select"
         w-screen
       >
         <div className="h-[inherit]">

@@ -90,7 +90,7 @@ export default function QuizFromFilePage() {
               onClick={handleUploadClick}
               className={`p-6 pr-10 text-center rounded-full hover:bg-[#606060] bg-[#ffe34385] text-[#161616] hover:text-black transition-all duration-[.4s] text-7xl mt-[8vw] ${
                 text ? "hidden" : ""
-              } uppercase w-fit`}
+              } uppercase w-fit ${loading ? "opacity-5" : ""}`}
             >
               📎Upload File
             </button>

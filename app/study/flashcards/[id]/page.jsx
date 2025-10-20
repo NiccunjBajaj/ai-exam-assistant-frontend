@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Spline from "@splinetool/react-spline";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 export default function FlashcardDetailPage() {
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -29,6 +31,15 @@ export default function FlashcardDetailPage() {
 
   return (
     <>
+      <div className="absolute top-[1vw] left-[2vw] bg-[#ffe243] hover:bg-[#606060] text-[#161616] rounded-[1vw] cursor-pointer">
+        <Link
+          href="/study/flashcards"
+          className="text-[1.2vw] px-[0.5vw] flex items-center"
+        >
+          <ArrowLeft />
+          Back
+        </Link>
+      </div>
       {/* <div className="fixed z-[-9999] w-full">
         <Spline scene="https://prod.spline.design/8UR40oDmhAS3NI8V/scene.splinecode" />
       </div> */}
