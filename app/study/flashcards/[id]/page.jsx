@@ -61,9 +61,8 @@ export default function FlashcardDetailPage() {
                   {i + 1}Q: {c.question}
                 </p>
                 <hr className="my-3 text-[#ffe243]" />
-                <p className="mt-1">
-                  <MarkdownRenderer content={autoBoldKeywords(c.answer)} />
-                </p>
+
+                <MarkdownRenderer content={autoBoldKeywords(c.answer)} />
               </div>
             ))}
           </div>

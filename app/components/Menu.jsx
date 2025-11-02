@@ -14,6 +14,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { useAuth } from "./AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { href: "/", label: "HOME", data: "home", icon: <HomeIcon size={130} /> },
@@ -48,11 +49,12 @@ const Menu = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [plan, setPlan] = useState(null);
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, credits } = useAuth();
 
   const menuRef = useRef(null);
   const tl = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showLogOutModal, setShowLogOutModal] = useState(false);
 
   const isStudySubRoute = pathname.startsWith("/study/");
   const isChatRoute = pathname.startsWith("/chat");
@@ -121,102 +123,170 @@ const Menu = () => {
   });
 
   const handleLogout = () => {
-    const confirmed = window.confirm("Are you sure you want to log out?");
-    if (confirmed) {
-      logout();
-      window.location.reload(); // 🔄 full UI reset after logout
-    }
+    logout();
+    window.location.reload(); // 🔄 full UI reset after logout
   };
 
   if (pathname === "/login" || pathname === "/register") return null;
 
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        if (showLogOutModal) {
+          setShowLogOutModal(false);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [showLogOutModal]);
+
   return (
-    <div
-      className="menu-container font-[crushed] select z-[99999]"
-      ref={menuRef}
-    >
-      <div
-        className={`menu-bar fixed top-[0] right-[0] ${
-          shouldShowLogo ? "w-screen" : "w-fit"
-        } z-[1] flex items-center justify-between font-[200]`}
-      >
-        <div className="overflow-hidden">
-          {shouldShowLogo && (
-            <div className="image w-[8vw] translate-x-[-100%]">
-              <a href="/">
-                <img
-                  className="w-full h-full object-cover"
-                  src="/logo.svg"
-                  alt="logo"
-                />
-              </a>
-            </div>
-          )}
-        </div>
-        <div className={`flex gap-[2vw] ${shouldShowLogo ? "" : "py-[1.2vw]"}`}>
-          {isLoggedIn ? (
-            <button
-              className="cursor-pointer bg-[#606060] font-[400] text-[#161616] hover:bg-red-500 hover:text-[#fff] px-[0.5vw] rounded-3xl text-[1.2vw]"
-              onClick={handleLogout}
+    <>
+      <AnimatePresence>
+        {showLogOutModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[#0000005b] backdrop-blur-[4px] flex items-center justify-center z-[1000]"
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="bg-[#1f1f1f] text-white p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
             >
-              Logout
-            </button>
-          ) : (
-            ""
-          )}
-          <div
-            className="menu-open hover_target cursor-pointer w-[2vw] flex flex-col justify-center gap-2"
-            data-cursor-scale="2"
-            onClick={toggleMenu}
-          >
-            <div className="h-[0.3vw] rounded-full w-100 bg-[#fff] bar"></div>
-            <div className="h-[0.3vw] rounded-full w-100 bg-[#ffe243] bar"></div>
-            <div className="h-[0.3vw] rounded-full w-100 bg-[#fff] bar"></div>
-          </div>
-        </div>
-      </div>
-
-      <div className="menu-overlay fixed top-0 left-0 w-[100vw] h-screen text-[#1a1a1a] bg-[#77670cb7] backdrop-blur-[20px] z-[2]">
-        <div className="menu-overlay-bar text-[3vw] flex justify-between items-center">
-          <div className="w-[8vw]">
-            <img
-              className="w-full h-full object-cover"
-              src="/logoinv.svg"
-              alt="logo"
-            />
-          </div>
-
-          <div
-            className="menu-close hover_target cursor-pointer text-[4vw]"
-            data-cursor-scale="2"
-            onClick={toggleMenu}
-          >
-            <p>
-              <XIcon size={40} />
-            </p>
-          </div>
-        </div>
-
-        <div className="menu-copy flex">
-          <div className="menu-links">
-            {navLinks.map((link, i) => (
-              <div
-                className="menu-link-item-holder w-[100vw] text-[12vw] my-4 leading-[8vw] tracking-widest"
-                key={i}
-                onClick={toggleMenu}
-              >
-                <Link
-                  href={link.href}
-                  className="menu-link hover_click hover:bg-[#1616165c] hover:text-[#ffe862] transition-all duration-[0.4s] px-[1vw] py-[0.5vw] rounded-xl flex items-center justify-center gap-[2vw]"
-                  data-cursor-label={link.data}
+              <h3 className="text-lg font-semibold mb-3">Logout User?</h3>
+              <p className="text-sm mb-6 opacity-80">
+                Are you sure you want to Logout?
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowLogOutModal(false)}
+                  className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600"
                 >
-                  {link.icon}
-                  {link.label}
-                </Link>
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setShowLogOutModal(false);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700"
+                >
+                  LogOut
+                </button>
               </div>
-            ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div
+        className="menu-container font-[crushed] select z-[99999]"
+        ref={menuRef}
+      >
+        <div
+          className={`menu-bar fixed top-[0] right-[0] ${
+            shouldShowLogo ? "w-screen" : "w-fit"
+          } z-[1] flex items-center justify-between font-[200]`}
+        >
+          <div className="overflow-hidden">
+            {shouldShowLogo && (
+              <div className="image w-[8vw] translate-x-[-100%]">
+                <a href="/">
+                  <img
+                    className="w-full h-full object-cover"
+                    src="/logo.svg"
+                    alt="logo"
+                  />
+                </a>
+              </div>
+            )}
           </div>
-          {/* <div className="menu-info flex flex-col justify-between gap-[2vw] items-end w-full pr-[2vw] py-[2vw]">
+          <div
+            className={`flex gap-[2vw] ${shouldShowLogo ? "" : "py-[1.2vw]"}`}
+          >
+            {isLoggedIn ? (
+              <>
+                {/* <div className="bg-[#ffe862] text-black font-semibold px-[1vw] py-[0.3vw] rounded-2xl text-[1.2vw] flex items-center justify-center">
+                  Credits: {credits}
+                </div> */}
+                <motion.div
+                  key={credits} // triggers animation when credits change
+                  initial={{ scale: 0.9, opacity: 0.5 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className={`text-black font-semibold px-[1vw] py-[0.3vw] rounded-2xl text-[1.2vw] ${
+                    credits == 0 ? "bg-[#630202]" : "bg-[#ffe862]"
+                  }`}
+                >
+                  Credits: {credits}
+                </motion.div>
+                <button
+                  className="cursor-pointer bg-[#606060] font-[400] text-[#161616] hover:bg-red-500 hover:text-[#fff] px-[0.5vw] rounded-3xl text-[1.2vw]"
+                  onClick={() => setShowLogOutModal(true)}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              ""
+            )}
+            <div
+              className="menu-open hover_target cursor-pointer w-[2vw] flex flex-col justify-center gap-2"
+              data-cursor-scale="2"
+              onClick={toggleMenu}
+            >
+              <div className="h-[0.3vw] rounded-full w-100 bg-[#fff] bar"></div>
+              <div className="h-[0.3vw] rounded-full w-100 bg-[#ffe243] bar"></div>
+              <div className="h-[0.3vw] rounded-full w-100 bg-[#fff] bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="menu-overlay fixed top-0 left-0 w-[100vw] h-screen text-[#1a1a1a] bg-[#77670cb7] backdrop-blur-[20px] z-[2]">
+          <div className="menu-overlay-bar text-[3vw] flex justify-between items-center">
+            <div className="w-[8vw]">
+              <img
+                className="w-full h-full object-cover"
+                src="/logoinv.svg"
+                alt="logo"
+              />
+            </div>
+
+            <div
+              className="menu-close hover_target cursor-pointer text-[4vw]"
+              data-cursor-scale="2"
+              onClick={toggleMenu}
+            >
+              <p>
+                <XIcon size={40} />
+              </p>
+            </div>
+          </div>
+
+          <div className="menu-copy flex">
+            <div className="menu-links">
+              {navLinks.map((link, i) => (
+                <div
+                  className="menu-link-item-holder w-[100vw] text-[12vw] my-4 leading-[8vw] tracking-widest"
+                  key={i}
+                  onClick={toggleMenu}
+                >
+                  <Link
+                    href={link.href}
+                    className="menu-link hover_click hover:bg-[#1616165c] hover:text-[#ffe862] transition-all duration-[0.4s] px-[1vw] py-[0.5vw] rounded-xl flex items-center justify-center gap-[2vw]"
+                    data-cursor-label={link.data}
+                  >
+                    {link.icon}
+                    {link.label}
+                  </Link>
+                </div>
+              ))}
+            </div>
+            {/* <div className="menu-info flex flex-col justify-between gap-[2vw] items-end w-full pr-[2vw] py-[2vw]">
             <div className="menu-info-col text-[4vw] flex flex-col items-end justify-between w-full">
               <a href="">X &#8599;</a>
               <a href="">Instagram &#8599;</a>
@@ -226,9 +296,10 @@ const Menu = () => {
               <p>info@examease.com</p>
             </div>
           </div> */}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

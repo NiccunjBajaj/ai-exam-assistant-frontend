@@ -2,6 +2,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { HomeIcon, LibraryBig } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import React from "react";
 
 const navLinks = [
@@ -11,6 +12,8 @@ const navLinks = [
 ];
 
 const StudyNav = () => {
+  const pathname = usePathname();
+
   useGSAP(() => {
     gsap.to(".link", {
       scale: 1,
@@ -29,7 +32,13 @@ const StudyNav = () => {
         </Link>
       </div>
       {navLinks.map((link, i) => (
-        <div className="bg-[#ffe343ec] scale-0 hover:bg-[#606060] text-[#161616] rounded-full py-[0.4vw] transition-all duration-[0.2s] px-[0.6vw] link">
+        <div
+          className={`${
+            pathname === link.href
+              ? "bg-[#606060] pointer-events-none"
+              : "bg-[#ffe343ec]"
+          } scale-0 hover:bg-[#606060] text-[#161616] rounded-full py-[0.4vw] transition-all duration-[0.2s] px-[0.6vw] link`}
+        >
           <Link key={i} className="text-[1.2vw]" href={link.href}>
             {link.label} &#8599;
           </Link>

@@ -64,6 +64,7 @@ export default function LoginRegisterPage() {
       if (!res.ok) throw new Error(data.detail || "Login failed");
 
       localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
       router.push("/");
     } catch (err) {
       setError(err.message);
@@ -113,6 +114,7 @@ export default function LoginRegisterPage() {
         throw new Error(loginData.detail || "Auto-login failed");
 
       localStorage.setItem("access_token", loginData.access_token);
+      localStorage.setItem("refresh_token", loginData.refresh_token);
       router.push("/");
     } catch (err) {
       setError(err.message);

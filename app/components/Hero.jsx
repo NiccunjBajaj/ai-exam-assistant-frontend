@@ -386,7 +386,7 @@ const Hero = () => {
                   <div className="text-[#ffe243] word scale-0">e</div>
                   <div className="text-[#ffe243] word scale-0">e</div>
                 </div>
-                <div className="overflow-hidden leading-[11vw] flex flex-col items-center justify-center">
+                <div className="overflow-hidden leading-[11vw] flex flex-col items-center justify-center w-full">
                   <div className="text-[7.5vw] tracking-[-0.5vw] font-[jost] font-[200] uppercase translate-y-[100vh] text">
                     a t<span className="text-[#ffe243]">oo</span>l b
                     <span className="text-[#ffe243]">o</span>x

@@ -13,13 +13,13 @@ const MarkdownRenderer = ({ content, cursorMode = false }) => {
         components={{
           code({ node, inline, className, children, ...props }) {
             return !inline ? (
-              <pre className="bg-[#ffe34353] inline-block text-base px-2 rounded-lg font-semibold text-white">
-                <code className={className} {...props}>
+              <pre className="inline-block text-[1rem] px-2 rounded-lg font-normal text-white w-full">
+                <code className={`${className} rounded `} {...props}>
                   {children}
                 </code>
               </pre>
             ) : (
-              <code className="bg-gray-700 px-1 rounded text-pink-300 text-sm">
+              <code className="bg-gray-500 px-1 rounded text-pink-300 text-sm">
                 {children}
               </code>
             );
@@ -47,22 +47,22 @@ const MarkdownRenderer = ({ content, cursorMode = false }) => {
           },
           h1({ children }) {
             return (
-              <h1 className="text-4xl my-5 font-bold bg-[#ffe34385] px-2 rounded-md text-black w-fit">
+              <h1 className="text-[1.5rem] my-3 font-bold bg-[#ffe34385] px-[0.35rem] rounded-md text-black w-fit">
                 {children} :
               </h1>
             );
           },
           h2({ children }) {
             return (
-              <h2 className="text-3xl my-5 font-semibold bg-[#ffe34385] px-2 rounded-md text-black w-fit">
+              <h2 className="text-[1.4rem] my-3 font-semibold bg-[#ffe34385] px-[0.35rem] rounded-md text-black w-fit">
                 {children} :
               </h2>
             );
           },
           h3({ children }) {
             return (
-              <h3 className="text-xl my-5 font-semibold bg-[#ffe34385] px-2 rounded-md text-black w-fit">
-                {children} :
+              <h3 className="text-[1.2rem] my-3 font-semibold bg-[#ffe34385] px-[0.35rem] rounded-md text-black w-fit">
+                {children}
               </h3>
             );
           },
@@ -77,32 +77,8 @@ const MarkdownRenderer = ({ content, cursorMode = false }) => {
             );
           },
           p: ({ children }) => {
-            const childArray = React.Children.toArray(children);
-
             return (
-              <p className="inline">
-                {childArray.map((child, i) => {
-                  if (
-                    cursorMode &&
-                    typeof child === "string" &&
-                    child.includes("<cursor-placeholder/>")
-                  ) {
-                    const parts = child.split("<cursor-placeholder/>");
-                    return parts.flatMap((part, index) =>
-                      index < parts.length - 1
-                        ? [
-                            part,
-                            <span
-                              key={`cursor-${i}-${index}`}
-                              className="inline-block w-[2px] h-[1.2em] bg-white align-text-bottom animate-pulse"
-                            />,
-                          ]
-                        : [part]
-                    );
-                  }
-                  return child;
-                })}
-              </p>
+              <p className="text-[1.1rem] tracking-[-0.013rem]">{children}</p>
             );
           },
         }}

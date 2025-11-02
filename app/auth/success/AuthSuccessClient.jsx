@@ -8,12 +8,16 @@ export default function AuthSuccessClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const refreshToken = searchParams.get("refresh_token");
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (token) {
       try {
         localStorage.setItem("access_token", token);
+        if (refreshToken) {
+          localStorage.setItem("refresh_token", refreshToken);
+        }
         router.push("/");
       } catch (err) {
         setError("Failed to save authentication token");
@@ -23,7 +27,7 @@ export default function AuthSuccessClient() {
       setError("No authentication token received");
       setTimeout(() => router.push("/login"), 2000);
     }
-  }, [token, router]);
+  }, [token, refreshToken, router]);
 
   if (error) {
     return (

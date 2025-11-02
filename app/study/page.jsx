@@ -9,9 +9,6 @@ export default function StudyPage() {
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const [userName, setUserName] = useState("");
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
-
   // Fetching user
   useEffect(() => {
     const fetchUser = async () => {
@@ -21,7 +18,6 @@ export default function StudyPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        console.log(data);
         setUserName(data.name);
       } catch (err) {
         console.error("Failed to fetch user:", err);
@@ -51,10 +47,7 @@ export default function StudyPage() {
       {/* <div className="fixed w-full z-[-99]">
         <Spline scene="https://prod.spline.design/7mYxTZR1HE7uxNny/scene.splinecode" />
       </div> */}
-      <main
-        className="h-screen bg-[#161616] backdrop-blur-[3px] select"
-        w-screen
-      >
+      <main className="h-screen bg-[#161616] backdrop-blur-[3px] select w-screen">
         <div className="h-[inherit]">
           <div className="overflow-hidden h-full">
             <div className="bound translate-y-[300%] text-left mx-[7vw] mt-[12vw] w-full h-fit px-[6vw]">
