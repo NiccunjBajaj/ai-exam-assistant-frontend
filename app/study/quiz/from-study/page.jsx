@@ -3,8 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import StudyNav from "@/app/components/StudyNav";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
+import { useAuth } from "@/app/components/AuthContext";
 
 export default function QuizFromStudyPage() {
+  const { fetchWithAuth } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
   const [notes, setNotes] = useState([]);
@@ -15,38 +20,38 @@ export default function QuizFromStudyPage() {
   const [marks, setMarks] = useState(5);
   const [mode, setMode] = useState("short");
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const filteredSessions = sessions.filter((s) =>
     s.title.toLowerCase().includes(search.toLowerCase())
   );
 
   const fetchSessions = async () => {
-    const res = await fetch(`${BACKEND_URL}/study-sessions?type=notes`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetchWithAuth(`${BACKEND_URL}/study-sessions?type=notes`);
     const data = await res.json();
     setSessions(data);
   };
 
   useEffect(() => {
     fetchSessions();
-  }, [token]);
+  }, []);
 
   const fetchNotes = async () => {
-    const res = await fetch(`${BACKEND_URL}/notes`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetchWithAuth(`${BACKEND_URL}/notes`);
     const data = await res.json();
     setNotes(data);
   };
 
   useEffect(() => {
-    if (!token) return;
     fetchNotes();
-  }, [token]);
+  }, []);
 
   const toggleNote = (id) => {
     setSelectedNotes((prev) =>
@@ -62,11 +67,10 @@ export default function QuizFromStudyPage() {
     if (!title.trim() || !selectedNotes.length) return;
 
     setLoading(true);
-    const res = await fetch(`${BACKEND_URL}/generate-quiz-from-study`, {
+    const res = await fetchWithAuth(`${BACKEND_URL}/generate-quiz-from-study`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         title,
@@ -82,22 +86,44 @@ export default function QuizFromStudyPage() {
 
   return (
     <>
-      <StudyNav />
+      <div
+        className={`absolute ${
+          isMobile ? "top-4 left-4" : "top-[1.3vw] left-[2vw]"
+        } bg-[#ffe655] hover:bg-[#606060] text-[#00141b] rounded-[1vw] cursor-pointer`}
+      >
+        <Link
+          href="/study/quiz"
+          className={`${
+            isMobile ? "text-lg px-2" : "text-[1.2vw] px-[0.5vw]"
+          } flex items-center`}
+        >
+          <ArrowLeft />
+          Back
+        </Link>
+      </div>
       <main className="pt-[6vw] p-6 max-w-fit mx-auto">
-        <h1 className="text-8xl font-bold mb-6 text-center w-fit">
-          Generate <span className="text-[#ffe243]">Quiz</span> from Study
+        <h1
+          className={`${
+            isMobile ? "text-5xl" : "text-8xl"
+          } font-bold my-6 text-center w-fit`}
+        >
+          Generate <span className="text-[#ffe655]">Quiz</span> from Study
         </h1>
-        <div className="w-2/3 mx-auto mt-[6vw] text-white">
+        <div
+          className={`${
+            isMobile ? "w-full" : "w-2/3"
+          } mx-auto mt-[6vw] text-white`}
+        >
           <div className="mb-4">
             <input
-              className="text-xl w-full p-4 outline-none rounded mb-2 bg-[#222222] text-[#ffe243]"
+              className="text-xl w-full p-4 outline-none rounded mb-2 bg-[#0b1e26] text-[#ffe655]"
               placeholder="Quiz Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-            <div className="flex gap-6">
+            <div className={`flex gap-6 ${isMobile ? "flex-col" : ""}`}>
               <select
-                className="w-full p-4 outline-none rounded bg-[#222222]"
+                className="w-full p-4 outline-none rounded bg-[#0b1e26]"
                 value={marks}
                 onChange={(e) => setMarks(parseInt(e.target.value))}
               >
@@ -108,26 +134,26 @@ export default function QuizFromStudyPage() {
                 <option value={250}>250-words quiz</option>
               </select>
               <select
-                className="w-full p-4 outline-none rounded bg-[#222222]"
+                className="w-full p-4 outline-none rounded bg-[#0b1e26]"
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
               >
-                <option value="short">Answer Type</option>
+                <option value="answer">Answer Type</option>
                 <option value="mcq">Multiple Choice</option>
               </select>
             </div>
           </div>
 
-          <div className="my-7 rounded bg-[#151515]">
+          <div className="my-7 rounded bg-[#0b1e26]">
             <div>
-              <h2 className="text-[#ffe243] text-3xl font-semibold mb-2 p-2">
+              <h2 className="text-[#ffe655] text-3xl font-semibold mb-2 p-2">
                 Notes
               </h2>
               <div className="space-y-2 max-h-60 overflow-y-auto outline-none rounded p-3">
                 <input
                   type="text"
                   placeholder="Search notes..."
-                  className="mx-auto p-2  mb-2 w-full bg-[#222222] text-[#ffe243] rounded-md outline-none"
+                  className="mx-auto p-2  mb-2 w-full bg-[#00141b] text-[#ffe655] rounded-md outline-none"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -150,7 +176,7 @@ export default function QuizFromStudyPage() {
         </div>
 
         <button
-          className="w-full text-[#161616] bg-[#606060] hover:bg-[#ffe243] py-3 rounded-lg text-lg"
+          className="w-full text-[#00141b] bg-[#606060] hover:bg-[#ffe655] py-3 rounded-lg text-lg"
           onClick={handleGenerate}
           disabled={loading || !selectedNotes.length}
         >

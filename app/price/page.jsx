@@ -14,6 +14,7 @@ import {
 import { useAuth } from "../components/AuthContext";
 
 export default function PricingPage() {
+  const { fetchWithAuth, setCredits } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const [plans, setPlans] = useState([]);
   const [planID, setPlanID] = useState({});
@@ -22,7 +23,14 @@ export default function PricingPage() {
   const [billingType, setBillingType] = useState("monthly");
   const [creditsToBuy, setCreditsToBuy] = useState(10);
   const [isBuyingCredits, setIsBuyingCredits] = useState(false);
-  const { setCredits } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Fetch plans and current user plan
   useEffect(() => {
@@ -32,7 +40,7 @@ export default function PricingPage() {
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/plan/all`);
+      const res = await fetchWithAuth(`${BACKEND_URL}/plan/all`);
       if (res.ok) {
         const data = await res.json();
         setPlans(data);
@@ -46,15 +54,8 @@ export default function PricingPage() {
   };
 
   const fetchPlan = async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
     try {
-      const res = await fetch(`${BACKEND_URL}/plan/me`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetchWithAuth(`${BACKEND_URL}/plan/me`);
       if (res.ok) {
         const data = await res.json();
         setPlanID(data);
@@ -91,26 +92,19 @@ export default function PricingPage() {
 
   const upgradePlan = async (planId, subscription_type) => {
     setLoadingPlanId(planId);
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      toast.error("Please login to upgrade");
-      setLoadingPlanId(null);
-      return;
-    }
 
     try {
       const plan = plans.find((p) => p.id === planId);
 
       // Free plan
       if (plan && plan.price === 0) {
-        const res = await fetch(`${BACKEND_URL}/plan/upgrade/${planId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ subscription_type }),
-        });
+        const res = await fetchWithAuth(
+          `${BACKEND_URL}/plan/upgrade/${planId}`,
+          {
+            method: "POST",
+            body: JSON.stringify({ subscription_type }),
+          }
+        );
         const data = await res.json();
         if (res.ok) {
           toast.success("Successfully upgraded to free plan!");
@@ -121,13 +115,13 @@ export default function PricingPage() {
 
       // One-time payment (lifetime)
       if (subscription_type === "lifetime" && plan.name !== "free") {
-        await handleOneTimePayment(planId, subscription_type, token);
+        await handleOneTimePayment(planId, subscription_type);
         return;
       }
 
       // Recurring subscription (monthly/yearly)
       if (["monthly", "yearly"].includes(subscription_type)) {
-        await handleRecurringSubscription(planId, subscription_type, token);
+        await handleRecurringSubscription(planId, subscription_type);
         return;
       }
     } catch (error) {
@@ -138,7 +132,7 @@ export default function PricingPage() {
     }
   };
 
-  const handleOneTimePayment = async (planId, subscription_type, token) => {
+  const handleOneTimePayment = async (planId, subscription_type) => {
     try {
       const userEmail =
         localStorage.getItem("user_email") || "user@example.com";
@@ -147,7 +141,7 @@ export default function PricingPage() {
       const orderData = await createRazorpayOrder(
         planId,
         subscription_type,
-        token
+        fetchWithAuth
       );
 
       const options = {
@@ -165,7 +159,7 @@ export default function PricingPage() {
               response.razorpay_order_id,
               response.razorpay_payment_id,
               response.razorpay_signature,
-              token
+              fetchWithAuth
             );
             toast.success("Payment successful! Your plan has been upgraded.");
             fetchPlan();
@@ -182,11 +176,7 @@ export default function PricingPage() {
     }
   };
 
-  const handleRecurringSubscription = async (
-    planId,
-    subscription_type,
-    token
-  ) => {
+  const handleRecurringSubscription = async (planId, subscription_type) => {
     try {
       const userEmail =
         localStorage.getItem("user_email") || "user@example.com";
@@ -195,13 +185,13 @@ export default function PricingPage() {
       const subscriptionData = await createRazorpaySubscription(
         planId,
         subscription_type,
-        token
+        fetchWithAuth
       );
 
       const options = {
         key: subscriptionData.key_id,
         subscription_id: subscriptionData.subscription_id,
-        name: "ExamEase",
+        name: "Learnee",
         description: `${subscription_type} plan subscription`,
         prefill: { name: userName, email: userEmail },
         notes: { plan_id: planId, subscription_type },
@@ -219,9 +209,6 @@ export default function PricingPage() {
   };
 
   const handleBuyCredits = async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return toast.error("Please login to buy credits");
-
     const qty = Number(creditsToBuy);
     if (Number.isNaN(qty) || qty < 10 || qty > 50) {
       return toast.error("Enter credits between 10 and 50");
@@ -229,7 +216,7 @@ export default function PricingPage() {
 
     setIsBuyingCredits(true);
     try {
-      const orderData = await createCreditOrder(qty, token);
+      const orderData = await createCreditOrder(qty, fetchWithAuth);
 
       const userEmail =
         localStorage.getItem("user_email") || "user@example.com";
@@ -250,7 +237,7 @@ export default function PricingPage() {
               response.razorpay_order_id,
               response.razorpay_payment_id,
               response.razorpay_signature,
-              token
+              fetchWithAuth
             );
             toast.success("Credits added successfully");
             if (result?.total_credits !== undefined)
@@ -272,7 +259,7 @@ export default function PricingPage() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#161616] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#00141b] text-[#e2e8f0] flex items-center justify-center">
         <div className="text-xl">Loading plans...</div>
       </div>
     );
@@ -291,17 +278,29 @@ export default function PricingPage() {
   });
 
   return (
-    <div className="bg-[#161616] flex flex-col items-center px-[5vw] pt-[0.5vw] min-h-screen text-white">
-      <h1 className="text-[3.35vw] font-bold mb-4">Choose Your Plan</h1>
+    <div
+      className={`bg-[#00141b] flex flex-col items-center ${
+        isMobile ? "px-2 pt-4" : "px-[5vw] pt-[0.5vw]"
+      } min-h-screen text-[#e2e8f0]`}
+    >
+      <h1
+        className={`${isMobile ? "text-4xl" : "text-[3.35vw]"} font-bold my-4`}
+      >
+        Choose Your Plan
+      </h1>
 
       {/* Billing toggle */}
-      <div className="flex items-center justify-center mb-8 bg-[#222222] p-2 rounded-full">
+      <div
+        className={`flex items-center justify-center mb-8 bg-[#0b1e26] ${
+          isMobile ? "p-1 rounded-full text-sm" : "p-2 rounded-full"
+        }`}
+      >
         <button
           onClick={() => setBillingType("monthly")}
           className={`px-4 py-2 rounded-full transition-all ${
             billingType === "monthly"
-              ? "bg-[#ffe343] text-[#161616] font-bold"
-              : "text-white"
+              ? "bg-[#ffe655] text-[#00141b] font-semibold"
+              : "text-[#e2e8f0]"
           }`}
         >
           Monthly
@@ -310,8 +309,8 @@ export default function PricingPage() {
           onClick={() => setBillingType("yearly")}
           className={`px-4 py-2 rounded-full transition-all ${
             billingType === "yearly"
-              ? "bg-[#ffe343] text-[#161616] font-bold"
-              : "text-white"
+              ? "bg-[#ffe655] text-[#00141b] font-semibold"
+              : "text-[#e2e8f0]"
           }`}
         >
           Yearly <span className="text-xs opacity-80">(Save 20%)</span>
@@ -319,28 +318,48 @@ export default function PricingPage() {
       </div>
 
       {/* Plan cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full">
+      <div
+        className={`grid ${
+          isMobile ? "grid-cols-1" : "grid-cols-3"
+        } gap-8 max-w-5xl w-full`}
+      >
         {/* Lifetime Plans */}
         {plans
           .filter((p) => p.billing_cycle === "lifetime")
           .map((plan) => (
             <div
               key={plan.id}
-              className={`rounded-2xl p-[1.5vw] shadow-lg transition-transform duration-300 hover:scale-105 ${
+              className={`rounded-2xl ${
+                isMobile ? "p-4" : "p-[1.5vw]"
+              } shadow-lg transition-transform duration-300 hover:scale-105 ${
                 plan.id == planID.planId
-                  ? "bg-[#ffe343] text-[#161616] border-4 border-white"
-                  : "bg-[#d5d5d5] text-[#161616]"
+                  ? "bg-[#ffe655] text-[#00141b] border-4 border-[#e2e8f0]"
+                  : "bg-[#e2e8f0] text-[#00141b]"
               }`}
             >
-              <h2 className="text-2xl font-semibold mb-2 flex items-center justify-between">
+              <h2
+                className={`${
+                  isMobile ? "text-xl" : "text-2xl"
+                } font-semibold mb-2 flex items-center justify-between`}
+              >
                 {plan.name}
                 {plan.id == planID.planId && (
-                  <span className="text-[1.1vw] bg-[#161616] text-white rounded-full px-[0.8vw] py-[0.2vw]">
+                  <span
+                    className={`${
+                      isMobile
+                        ? "text-xs px-2 py-1"
+                        : "text-[1.1vw] px-[0.8vw] py-[0.2vw]"
+                    } bg-[#00141b] text-[#e2e8f0] rounded-full`}
+                  >
                     Active
                   </span>
                 )}
               </h2>
-              <p className="text-4xl font-bold mb-4">
+              <p
+                className={`${
+                  isMobile ? "text-3xl" : "text-4xl"
+                } font-bold mb-4`}
+              >
                 ₹{plan.price}
                 {plan.price > 0 && (
                   <span className="text-sm font-normal ml-1">/lifetime</span>
@@ -350,7 +369,9 @@ export default function PricingPage() {
                 {formatFeatures(plan).map((feature, idx) => (
                   <li key={idx} className="flex items-center gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                    <span>{feature}</span>
+                    <span className={`${isMobile ? "text-sm" : ""}`}>
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -359,8 +380,8 @@ export default function PricingPage() {
                 disabled={plan.id === planID?.planId}
                 className={`w-full py-3 rounded-xl font-semibold transition-all ${
                   plan.id === planID?.planId
-                    ? "bg-[#161616] text-[#FFF] pointer-events-none opacity-[0.4]"
-                    : "bg-[#161616] hover:bg-[#ffe343] text-[#FFF] hover:text-[#161616] cursor-pointer"
+                    ? "bg-[#00141b] text-[#e2e8f0] pointer-events-none opacity-[0.4]"
+                    : "bg-[#00141b] hover:bg-[#ffe655] text-[#e2e8f0] hover:text-[#00141b] cursor-pointer"
                 }`}
               >
                 {loadingPlanId === plan.id
@@ -376,21 +397,35 @@ export default function PricingPage() {
         {orderedPlans.map((plan) => (
           <div
             key={plan.id}
-            className={`rounded-2xl p-[1.5vw] shadow-lg transition-transform duration-300 hover:scale-105 ${
+            className={`rounded-2xl ${
+              isMobile ? "p-4" : "p-[1.5vw]"
+            } shadow-lg transition-transform duration-300 hover:scale-105 ${
               plan.id == planID.planId
-                ? "bg-[#ffe343] text-[#161616] border-4 border-white"
-                : "bg-[#d5d5d5] text-[#161616]"
+                ? "bg-[#ffe655] text-[#00141b] border-4 border-[#e2e8f0]"
+                : "bg-[#e2e8f0] text-[#00141b]"
             }`}
           >
-            <h2 className="text-2xl font-semibold mb-2 flex items-center justify-between">
+            <h2
+              className={`${
+                isMobile ? "text-xl" : "text-2xl"
+              } font-semibold mb-2 flex items-center justify-between`}
+            >
               {plan.name}
               {plan.id == planID.planId && (
-                <span className="text-[1.1vw] bg-[#161616] text-white rounded-full px-[0.8vw] py-[0.2vw]">
+                <span
+                  className={`${
+                    isMobile
+                      ? "text-xs px-2 py-1"
+                      : "text-[1.1vw] px-[0.8vw] py-[0.2vw]"
+                  } bg-[#00141b] text-[#e2e8f0] rounded-full`}
+                >
                   Active
                 </span>
               )}
             </h2>
-            <p className="text-4xl font-bold mb-4">
+            <p
+              className={`${isMobile ? "text-3xl" : "text-4xl"} font-bold mb-4`}
+            >
               ₹{plan.price}
               {plan.price > 0 && (
                 <span className="text-sm font-normal ml-1">
@@ -402,7 +437,9 @@ export default function PricingPage() {
               {formatFeatures(plan).map((feature, idx) => (
                 <li key={idx} className="flex items-center gap-2">
                   <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span>{feature}</span>
+                  <span className={`${isMobile ? "text-sm" : ""}`}>
+                    {feature}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -411,8 +448,8 @@ export default function PricingPage() {
               disabled={plan.id === planID?.planId}
               className={`w-full py-3 rounded-xl font-semibold transition-all ${
                 plan.id === planID?.planId
-                  ? "bg-[#161616] text-[#FFF] pointer-events-none opacity-[0.4]"
-                  : "bg-[#161616] hover:bg-[#ffe343] text-[#FFF] hover:text-[#161616] cursor-pointer"
+                  ? "bg-[#00141b] text-[#e2e8f0] pointer-events-none opacity-[0.4]"
+                  : "bg-[#00141b] hover:bg-[#ffe655] text-[#e2e8f0] hover:text-[#00141b] cursor-pointer"
               }`}
             >
               {loadingPlanId === plan.id
@@ -424,15 +461,26 @@ export default function PricingPage() {
           </div>
         ))}
       </div>
-
       {/* Credits Section */}
-      <div className="mt-12 w-full max-w-3xl">
-        <div className="bg-[#d5d5d5] text-[#161616] rounded-2xl p-6 shadow-lg">
-          <h3 className="text-2xl font-semibold mb-2">Need more credits?</h3>
-          <p className="opacity-80 mb-4">
+      <div
+        className={`mt-12 w-full ${isMobile ? "max-w-full px-4" : "max-w-3xl"}`}
+      >
+        <div className="bg-[#e2e8f0] text-[#00141b] rounded-2xl p-6 shadow-lg">
+          <h3
+            className={`${
+              isMobile ? "text-xl" : "text-2xl"
+            } font-semibold mb-2`}
+          >
+            Need more credits?
+          </h3>
+          <p className={`${isMobile ? "text-sm" : ""} opacity-80 mb-4`}>
             Buy between 10 and 50 credits. ₹2 per credit.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div
+            className={`flex ${
+              isMobile ? "flex-col" : "sm:flex-row"
+            } gap-4 items-center`}
+          >
             <div className="flex items-center gap-3">
               <label htmlFor="credits" className="font-medium">
                 Credits
@@ -444,11 +492,15 @@ export default function PricingPage() {
                 max={50}
                 value={creditsToBuy}
                 onChange={(e) => setCreditsToBuy(e.target.value)}
-                className="w-28 px-3 py-2 rounded-lg border border-[#bbb] bg-white text-[#161616]"
+                className="w-28 px-3 py-2 rounded-lg border border-[#00141b] bg-[#e2e8f0] text-[#00141b]"
               />
             </div>
-            <div className="ml-auto flex items-center gap-4">
-              <span className="text-lg">
+            <div
+              className={`ml-auto flex ${
+                isMobile ? "flex-col w-full" : "items-center"
+              } gap-4`}
+            >
+              <span className={`${isMobile ? "text-base" : "text-lg"}`}>
                 Total: ₹
                 {Math.max(10, Math.min(50, Number(creditsToBuy) || 0)) * 2}
               </span>
@@ -457,8 +509,8 @@ export default function PricingPage() {
                 disabled={isBuyingCredits}
                 className={`px-5 py-3 rounded-xl font-semibold transition-all ${
                   isBuyingCredits
-                    ? "bg-[#161616] text-white opacity-60 cursor-not-allowed"
-                    : "bg-[#161616] text-white hover:bg-[#ffe343] hover:text-[#161616]"
+                    ? "bg-[#00141b] text-[#e2e8f0] opacity-60 cursor-not-allowed"
+                    : "bg-[#00141b] text-[#e2e8f0] hover:bg-[#ffe655] hover:text-[#00141b]"
                 }`}
               >
                 {isBuyingCredits ? "Processing..." : "Buy Credits"}
@@ -468,7 +520,11 @@ export default function PricingPage() {
         </div>
       </div>
 
-      <div className="mt-8 text-center text-sm opacity-70 max-w-md">
+      <div
+        className={`${
+          isMobile ? "mt-4 text-xs" : "mt-8 text-sm"
+        } text-center opacity-70 max-w-md`}
+      >
         <p>
           All plans include access to our core features. Upgrade anytime to
           unlock higher limits and premium features.

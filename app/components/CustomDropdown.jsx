@@ -31,7 +31,7 @@ export default function CustomDropdown({ marks, setMarks }) {
     >
       <div
         onClick={() => setIsOpen((prev) => !prev)}
-        className="w-fit flex justify-between items-center bg-transparent text-white py-3 px-2 rounded-md transition-all"
+        className="w-fit flex justify-between items-center bg-transparent text-[#e2e8f0] py-3 px-2 rounded-md transition-all"
       >
         {selectedOption?.label}
         <ChevronDown
@@ -41,7 +41,7 @@ export default function CustomDropdown({ marks, setMarks }) {
       </div>
 
       {isOpen && (
-        <ul className="absolute left-0 bottom-full -mb-2 w-fit bg-[#1e1e1e] rounded-md z-10">
+        <ul className="absolute left-0 bottom-full -mb-2 w-fit bg-[#00141b] rounded-md z-10">
           {options.map((opt) => (
             <li
               key={opt.value}
@@ -49,9 +49,9 @@ export default function CustomDropdown({ marks, setMarks }) {
                 setMarks(opt.value);
                 setIsOpen(false);
               }}
-              className={`m-2 p-1 cursor-pointer rounded-md hover:bg-[#333333] text-white transition ${
+              className={`m-2 p-1 cursor-pointer rounded-md hover:bg-[#f1e596] hover:text-[#000] transition ${
                 opt.value === marks
-                  ? "bg-[#333333] text-white"
+                  ? "bg-[#f2e596] text-[#000]"
                   : "text-gray-200"
               }`}
             >

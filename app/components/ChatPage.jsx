@@ -14,20 +14,68 @@ import {
   Trash2Icon,
   AlertTriangle,
   X,
+  ProjectorIcon,
+  SendHorizonal,
+  Share2,
+  MoreHorizontal,
+  Upload,
 } from "lucide-react";
 import { useAuth } from "./AuthContext";
+
+function StreamingMessage({ text, onDone }) {
+  const [displayed, setDisplayed] = useState("");
+  const iRef = useRef(0);
+
+  // adaptive speed (short answers feel snappier, long ones still smooth)
+  const base = text.length < 120 ? 18 : text.length < 600 ? 14 : 10;
+
+  useEffect(() => {
+    if (!text) return;
+    iRef.current = 0;
+    setDisplayed("");
+
+    // stream characters; make punctuation breathe a bit
+    const tick = () => {
+      if (iRef.current >= text.length) {
+        onDone?.();
+        return;
+      }
+      const nextChar = text[iRef.current++];
+      setDisplayed((prev) => prev + nextChar);
+
+      const slowDown =
+        nextChar === "." || nextChar === "!" || nextChar === "?"
+          ? 12
+          : nextChar === "," || nextChar === ";"
+          ? 6
+          : 0;
+
+      setTimeout(tick, base + slowDown);
+    };
+
+    const t = setTimeout(tick, base);
+    return () => clearTimeout(t);
+  }, [text, onDone]);
+
+  return (
+    <div className="relative">
+      <MarkdownRenderer content={displayed} />
+      <span className="inline-block w-2 h-5 bg-[#ffe343] ml-1 animate-pulse rounded-sm absolute -bottom-1"></span>
+    </div>
+  );
+}
 
 function ChatContent() {
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
 
-  const { setCredits } = useAuth();
+  const { setCredits, fetchWithAuth } = useAuth();
 
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [sessionId, setSessionId] = useState(null);
@@ -37,12 +85,28 @@ function ChatContent() {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [targetSessionId, setTargetSessionId] = useState(null);
   const [newTitle, setNewTitle] = useState("");
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareLink, setShareLink] = useState("");
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const fileUploaderRef = useRef(null);
   const isNewSession = useRef(false);
   const isSubmitting = useRef(false);
   const isFetchingMessages = useRef(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) setShowSidebar(true);
+  });
 
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -75,14 +139,9 @@ function ChatContent() {
   // Rename session
   const handleRename = async (id, title) => {
     if (!title?.trim()) return;
-    const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`${BACKEND_URL}/rename-session/${id}`, {
+      const res = await fetchWithAuth(`${BACKEND_URL}/rename-session/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ title }),
       });
       if (!res.ok) throw new Error("Rename failed");
@@ -96,13 +155,9 @@ function ChatContent() {
 
   // Delete session
   const handleDelete = async (id) => {
-    // if (!confirm("Are you sure you want to delete this chat?")) return;
-
-    const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`${BACKEND_URL}/delete-session/${id}`, {
+      const res = await fetchWithAuth(`${BACKEND_URL}/delete-session/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Delete failed");
 
@@ -116,6 +171,20 @@ function ChatContent() {
     }
   };
 
+  const handleShare = async (id) => {
+    try {
+      const res = await fetchWithAuth(`${BACKEND_URL}/share-chat/${id}`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Share failed");
+      const data = await res.json();
+      setShareLink(`${window.location.origin}/shared-chat/${data.share_id}`);
+      setShowShareModal(true);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   // Fetch user sessions
   useEffect(() => {
     fetchSessions();
@@ -123,10 +192,7 @@ function ChatContent() {
 
   const fetchSessions = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${BACKEND_URL}/sessions`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetchWithAuth(`${BACKEND_URL}/sessions`);
       setPastSessions(await res.json());
     } catch (err) {
       console.error("Failed to fetch sessions", err);
@@ -145,25 +211,19 @@ function ChatContent() {
   useEffect(() => {
     if (!sessionId) return;
 
-    // Skip fetching if this is a new session we just created
     if (isNewSession.current) {
       console.log("Skipping fetch - new session");
       return;
     }
 
-    // Prevent double fetching due to React StrictMode
     if (isFetchingMessages.current) return;
     isFetchingMessages.current = true;
 
     const fetchMessages = async () => {
       try {
-        const token = localStorage.getItem("access_token");
-        const res = await fetch(`${BACKEND_URL}/messages/${sessionId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetchWithAuth(`${BACKEND_URL}/messages/${sessionId}`);
         const data = await res.json();
 
-        // Deduplicate messages by ID
         const uniqueMessages = data.filter(
           (msg, index, self) => index === self.findIndex((m) => m.id === msg.id)
         );
@@ -172,6 +232,7 @@ function ChatContent() {
           uniqueMessages.map((m) => ({
             ...m,
             timestamp: new Date(m.timestamp),
+            streaming: false,
           }))
         );
         fileUploaderRef.current?.clearFile();
@@ -186,8 +247,7 @@ function ChatContent() {
   }, [sessionId]);
 
   const startNewChat = () => {
-    // Just clear current session — don't create it in backend yet
-    isNewSession.current = false; // Reset flag
+    isNewSession.current = false;
     setSessionId(null);
     setMessages([]);
     fileUploaderRef.current?.clearFile();
@@ -198,13 +258,8 @@ function ChatContent() {
     e.preventDefault();
     if (!input.trim() || isLoading || isSubmitting.current) return;
 
-    const token = localStorage.getItem("access_token");
-    if (!token) return router.push("/login");
-
-    // Set submitting flag to prevent double submission
     isSubmitting.current = true;
 
-    // Store input value before clearing it
     const inputValue = input;
 
     const userMessage = {
@@ -214,9 +269,7 @@ function ChatContent() {
       timestamp: new Date(),
     };
 
-    // 1. Optimistically update the UI with the user's message
     setMessages((prev) => {
-      // Check if user message already exists to prevent duplicates
       const messageExists = prev.some(
         (m) =>
           m.content === userMessage.content &&
@@ -228,27 +281,22 @@ function ChatContent() {
       }
       return [...prev, userMessage];
     });
-    setInput(""); // 2. Clear the input right away
+    setInput("");
     setIsLoading(true);
     setError("");
 
     try {
-      const res = await fetch(`${BACKEND_URL}/chat`, {
+      const res = await fetchWithAuth(`${BACKEND_URL}/chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           session_id: sessionId,
-          user_input: userMessage.content, // Use content from the message object
+          user_input: userMessage.content,
           marks,
         }),
       });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        // FastAPI wraps HTTPException detail in "detail" property
         const error = errorData.detail || errorData;
         if (error.error === "out_of_credits") {
           setError(
@@ -258,9 +306,8 @@ function ChatContent() {
         } else {
           setError(error.message || "Something went wrong");
         }
-        // Remove user message since request failed
         setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
-        return; // ⛔ stop execution
+        return;
       }
 
       const data = await res.json();
@@ -270,9 +317,9 @@ function ChatContent() {
         content: data.response,
         role: "bot",
         timestamp: new Date(),
+        streaming: true,
       };
 
-      // If a new session was created, update state
       if (!sessionId && data.session_id) {
         console.log("Setting isNewSession to true");
         isNewSession.current = true;
@@ -287,26 +334,19 @@ function ChatContent() {
         ]);
       }
 
-      // 3. Only add the bot's message when it arrives
-
       setMessages((prev) => {
-        // Check if bot message already exists to prevent duplicates
-        const messageExists = prev.some(
+        const exists = prev.some(
           (m) => m.role === "bot" && m.content === botMessage.content
         );
-        if (messageExists) {
-          return prev;
-        }
-        return [...prev, botMessage];
+        return exists ? prev : [...prev, botMessage];
       });
 
       if (data.credits_left !== undefined) {
-        setCredits(data.credits_left); // update global context
+        setCredits(data.credits_left);
       }
     } catch (err) {
       console.error("Chat error:", err);
       setError(err.message);
-      // Optional: Add logic to show the user's message failed to send
       setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
     } finally {
       setIsLoading(false);
@@ -334,15 +374,60 @@ function ChatContent() {
         if (showRenameModal) {
           setShowRenameModal(false);
         }
+        if (showShareModal) {
+          setShowShareModal(false);
+        }
+        if (isMobile) {
+          if (showSidebar) {
+            setShowSidebar(false);
+          }
+        }
       }
     };
 
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [showDeleteModal, showRenameModal]);
+  }, [showDeleteModal, showRenameModal, showShareModal, showSidebar]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (openMenuId && !event.target.closest(".menu-container")) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [openMenuId]);
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    fileUploaderRef.current?.handleFiles(e.dataTransfer.files);
+  };
 
   return (
     <>
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]"
+            onDragOver={(e) => e.preventDefault()}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+          >
+            <div className="text-center text-[#e2e8f0]">
+              <Upload size={64} />
+              <p className="mt-4 text-2xl">Drop files to upload</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {showDeleteModal && (
           <motion.div
@@ -355,7 +440,7 @@ function ChatContent() {
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
-              className="bg-[#1f1f1f] text-white p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
+              className="bg-[#00141b] text-[#e2e8f0] p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
             >
               <h3 className="text-lg font-semibold mb-3">Delete Chat?</h3>
               <p className="text-sm mb-6 opacity-80">
@@ -364,7 +449,7 @@ function ChatContent() {
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600"
+                  className="px-4 py-2 rounded-lg bg-[#0B1E26] hover:bg-gray-600"
                 >
                   Cancel
                 </button>
@@ -396,7 +481,7 @@ function ChatContent() {
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
-              className="bg-[#1f1f1f] text-white p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
+              className="bg-[#00141b] text-[#e2e8f0] p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
             >
               <h3 className="text-lg font-semibold mb-3">Rename Chat</h3>
               <input
@@ -412,12 +497,12 @@ function ChatContent() {
                   }
                 }}
                 onChange={(e) => setNewTitle(e.target.value)}
-                className="w-full p-3 rounded-lg bg-[#121212] border border-[#444] text-[#ffe243] outline-none mb-5"
+                className="w-full p-3 rounded-lg bg-[#00141b] border border-[#e2e8f0] text-[#ffe655] outline-none mb-5"
               />
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowRenameModal(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600"
+                  className="px-4 py-2 rounded-lg bg-[#0B1E26] hover:bg-gray-600"
                 >
                   Cancel
                 </button>
@@ -426,7 +511,7 @@ function ChatContent() {
                     handleRename(targetSessionId, newTitle);
                     setShowRenameModal(false);
                   }}
-                  className="px-4 py-2 rounded-lg bg-[#ffe243] text-black font-semibold hover:bg-[#ffeb6b]"
+                  className="px-4 py-2 rounded-lg bg-[#f1e596] text-black font-semibold hover:bg-[#ffe655]"
                 >
                   Save
                 </button>
@@ -435,71 +520,156 @@ function ChatContent() {
           </motion.div>
         )}
       </AnimatePresence>
-      <main className="min-h-screen flex bg-[#161616] select noto">
+
+      {/* Share Modal */}
+      <AnimatePresence>
+        {showShareModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[#0000005b] backdrop-blur-[4px] flex items-center justify-center z-[1000]"
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="bg-[#00141b] text-[#e2e8f0] p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
+            >
+              <h3 className="text-lg font-semibold mb-3">Share Chat</h3>
+              <p className="text-sm mb-4 opacity-80">
+                Anyone with this link can view the chat.
+              </p>
+              <input
+                type="text"
+                readOnly
+                value={shareLink}
+                className="w-full p-3 rounded-lg bg-[#00141b] border border-[#e2e8f0] text-[#ffe655] outline-none mb-5"
+                onFocus={(e) => e.target.select()}
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="px-4 py-2 rounded-lg bg-[#0B1E26] hover:bg-gray-600"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => navigator.clipboard.writeText(shareLink)}
+                  className="px-4 py-2 rounded-lg bg-[#f1e596] text-black font-semibold hover:bg-[#ffe655]"
+                >
+                  Copy Link
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Side Pannel */}
+      <main
+        className="min-h-screen flex bg-[#00141b] select noto"
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+      >
         <AnimatePresence>
           {showSidebar && (
             <motion.aside
-              initial={{ x: -300 }}
+              initial={{ x: isMobile ? -window.innerWidth : -300 }}
               animate={{ x: 0 }}
-              exit={{ x: -300 }}
+              exit={{ x: isMobile ? -window.innerWidth : -300 }}
               transition={{ type: "spring", stiffness: 200, damping: 30 }}
-              className="h-[100vh] w-64 bg-[#181818] p-4"
+              className={`h-[100vh] ${
+                isMobile ? "w-full fixed top-0 left-0 z-50" : "w-[15%]"
+              } bg-[#0B1E26] p-4`}
             >
-              <div className="text-white flex items-center w-full justify-between mb-2 z-[999] no_scrollbar">
-                <a href="/" className="text-2xl opacity-0">
+              <div className="flex items-center w-full justify-between mb-2 z-[999] no_scrollbar">
+                <a
+                  href="/"
+                  className="text-5xl font-[mouse] tracking-wide text-center w-full"
+                >
                   Proff
                 </a>
+                {isMobile && (
+                  <button onClick={toggleSidebar} className="text-white">
+                    <X size={24} />
+                  </button>
+                )}
               </div>
-              <hr className="my-3 text-[#ffe243]" />
+              <hr className="my-3 text-[#00141b]" />
               <button
                 onClick={startNewChat}
-                className="w-full mb-3 py-2 text-[0.9rem] text-left text-white rounded-lg flex gap-2 hover:bg-[#ffe34385] transition-all duration-[0.3s] items-center"
+                className="w-full mb-3 py-2 text-[1.2rem] text-left rounded-lg flex gap-2 hover:bg-[#f1e596] hover:text-[#000] transition-all duration-[0.3s] items-center"
               >
                 <SquarePen size={20} /> New Chat
               </button>
-              <hr className="mb-3 text-[#ffe243]" />
-              <h2 className="text-[0.9rem] text-white font-semibold mb-2">
+              <hr className="mb-3 text-[#00141b]" />
+              <h2 className="text-[1.2rem] text-white font-semibold mb-2">
                 Past Chats
               </h2>
               {pastSessions.map((s) => (
                 <div
                   key={s.id}
-                  className={`flex justify-between rounded-lg mb-2 hover:bg-[#ffe34385] transition-all duration-[0.3s] ${
-                    s.id === sessionId ? "bg-[#ffe34385]" : "text-[#fff]"
+                  className={`flex justify-between items-center rounded-lg mb-2 hover:bg-[#F1E596] hover:text-[#000] transition-all duration-[0.3s] ${
+                    s.id === sessionId
+                      ? "bg-[#F1E596] text-[#000]"
+                      : "text-[#e2e8f0]"
                   }`}
                 >
                   <button
                     onClick={() => handlePastChatClick(s.id)}
-                    className="text-[#ffe243] block w-full text-left px-3 py-2 text-[0.9rem]"
+                    className="block w-full text-left px-3 py-2 text-[1.02rem]"
                   >
                     {s.title}
                   </button>
-                  <div className="flex gap-1">
+                  <div className="relative menu-container">
                     <button
-                      onClick={() => {
-                        setTargetSessionId(s.id);
-                        setNewTitle(s.title);
-                        setShowRenameModal(true);
-                      }}
-                      className="p-2 rounded-md hover:bg-white/10"
+                      onClick={() =>
+                        setOpenMenuId(openMenuId === s.id ? null : s.id)
+                      }
+                      className="p-2 rounded-md hover:bg-black/10"
                     >
-                      <PencilLine
-                        size={18}
-                        className="text-white cursor-pointer"
-                      />
+                      <MoreHorizontal size={20} className="cursor-pointer" />
                     </button>
-                    <button
-                      onClick={() => {
-                        setTargetSessionId(s.id);
-                        setShowDeleteModal(true);
-                      }}
-                      className="p-2 rounded-md hover:bg-white/10"
-                    >
-                      <Trash2Icon
-                        size={18}
-                        className="text-red-500 cursor-pointer"
-                      />
-                    </button>
+                    {openMenuId === s.id && (
+                      <div className="absolute right-0 mt-2 w-48 bg-[#00141b] rounded-md shadow-lg z-10">
+                        <button
+                          onClick={() => {
+                            handleShare(s.id);
+                            setOpenMenuId(null);
+                          }}
+                          className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
+                        >
+                          <Share2 size={16} />
+                          Share
+                        </button>
+                        <button
+                          onClick={() => {
+                            setTargetSessionId(s.id);
+                            setNewTitle(s.title);
+                            setShowRenameModal(true);
+                            setOpenMenuId(null);
+                          }}
+                          className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
+                        >
+                          <PencilLine size={16} />
+                          Rename
+                        </button>
+                        <button
+                          onClick={() => {
+                            setTargetSessionId(s.id);
+                            setShowDeleteModal(true);
+                            setOpenMenuId(null);
+                          }}
+                          className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500 hover:text-white"
+                        >
+                          <Trash2Icon size={16} />
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -511,21 +681,34 @@ function ChatContent() {
         <AnimatePresence>
           <motion.section
             layout
-            animate={{ width: showSidebar ? "calc(100% - 16rem)" : "100%" }}
+            animate={{
+              width: showSidebar ? (isMobile ? "100%" : "85%") : "100%",
+            }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
             className="h-screen"
           >
             <div className="h-screen select1 relative">
-              <div className="bg-[#1f1f1f] flex flex-col h-[inherit] w-[inherit] text-white">
-                <header className="text-white select flex items-center justify-between w-fit">
-                  <h1
-                    onClick={() => setShowSidebar(true)}
-                    className={`mx-[4vw] text-2xl cursor-pointer p-3 py-6 ${
-                      showSidebar ? "hidden" : ""
-                    }`}
-                  >
-                    ASTRA
-                  </h1>
+              {sessionId && (
+                <button
+                  onClick={() => handleShare(sessionId)}
+                  className={`p-2 flex items-center gap-1 absolute ${
+                    isMobile ? "top-18.5 left-3" : "top-[1.3vw] left-[1vw]"
+                  } rounded-md bg-[#ffe655] hover:bg-[#f1e596] text-[#00141b] cursor-pointer`}
+                >
+                  <Share2 size={15} /> {isMobile ? "" : "Share"}
+                </button>
+              )}
+              <div className="bg-[#00141b] flex flex-col h-[inherit] w-[inherit] text-[#e2e8f0]">
+                <header className="select flex items-center justify-between w-fit">
+                  {isMobile && (
+                    <button onClick={toggleSidebar} className="p-3 w-15">
+                      <img
+                        src="/smalllogo.svg"
+                        alt="Beee"
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  )}
                 </header>
                 <div className="flex flex-col w-3/4 sm:w-1/2 md:w-1/3 mx-auto my-4">
                   <input
@@ -533,55 +716,74 @@ function ChatContent() {
                     placeholder="Search sessions..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="p-4 w-full rounded-2xl text-[#ffe243] bg-[#121212] border-none outline-none"
+                    className="p-4 w-full rounded-2xl text-[#ffe655] bg-[#0b1e26] border-none outline-none"
                   />
                   {query && (
-                    <div className="mt-1 flex-col flex max-h-96 overflow-y-auto bg-[#121212] rounded-2xl">
+                    <div className="mt-1 flex-col flex max-h-96 overflow-y-auto bg-[#0b1e26] rounded-2xl">
                       {searchResults.length > 0 ? (
                         searchResults.map((session) => (
                           <button
                             key={session.id}
                             onClick={() => handlePastChatClick(session.id)}
-                            className="p-3 text-left hover:bg-[#212121] rounded-md"
+                            className="p-3 text-left hover:bg-[#f1e596] hover:text-[#000] rounded-md"
                           >
                             {session.title}
                           </button>
                         ))
                       ) : (
-                        <p className="text-white p-3">No sessions found.</p>
+                        <p className="p-3">No sessions found.</p>
                       )}
                     </div>
                   )}
                 </div>
-                <section className="flex-1 overflow-y-auto my-[6%] p-6 space-y-6 mx-[auto] no-scrollbar">
-                  {messages.length === 0 ? (
-                    <div className="text-center text-[#fff] mt-[14vw]">
-                      <p className="text-5xl">
+                <section
+                  className={`flex-1 overflow-y-auto ${
+                    isMobile ? "p-4" : "p-6"
+                  } space-y-6 no-scrollbar`}
+                >
+                  {messages.length === 0 || query ? (
+                    <div
+                      className={`${!query ? "block" : "hidden"} text-center ${
+                        isMobile ? "mt-[20vw]" : "mt-[14vw]"
+                      }`}
+                    >
+                      <p
+                        className={`${
+                          isMobile ? "text-3xl" : "text-5xl"
+                        } text-[#e2e8f0]`}
+                      >
                         Start a{" "}
-                        <span className="text-[#ffe243]">conversation!</span>
+                        <span className="text-[#ffe655]">conversation!</span>
                       </p>
                       <p className="text-lg mt-5">
                         Ask me anything about your{" "}
-                        <span className="text-[#ffe243]">studies</span>, and
+                        <span className="text-[#ffe655]">studies</span>, and
                         I'll help you
-                        <span className="text-[#ffe243]"> learn</span>.
+                        <span className="text-[#ffe655]"> learn</span>.
                       </p>
                     </div>
                   ) : (
                     messages.map((m, index) => {
+                      const isLastBotMessage =
+                        index === messages.length - 1 &&
+                        m.role === "bot" &&
+                        isLoading;
+
                       return (
                         <div
                           key={m.id}
                           className={`flex ${
                             m.role === "user" ? "justify-end" : "justify-start"
-                          } px-6 sm:px-17 md:px-60`}
+                          } ${isMobile ? "px-4" : "w-[55%]"} mb-30 mx-auto`}
                         >
                           <div
                             className={`rounded-lg px-4 py-3 ${
                               m.role === "user"
-                                ? "bg-[#121212] max-w-[75%]"
+                                ? `bg-[#0B1E26] ${
+                                    isMobile ? "max-w-[90%]" : "max-w-[100%]"
+                                  }`
                                 : "bg-none w-full"
-                            } text-[#e5e4e4]`}
+                            } text-[#e2e8f0]`}
                           >
                             {m.file && (
                               <p className="text-sm text-gray-200 mb-1 flex items-center bg-[#333333] rounded-lg px-2 py-1 w-fit">
@@ -589,10 +791,30 @@ function ChatContent() {
                                 {m.file}
                               </p>
                             )}
-                            <MarkdownRenderer
-                              content={autoBoldKeywords(m.content)}
-                            />
-                            <span className="text-xs opacity-70 mt-3 block">
+
+                            {m.role === "bot" && m.streaming ? (
+                              <StreamingMessage
+                                text={m.content}
+                                onDone={() =>
+                                  setMessages((prev) =>
+                                    prev.map((msg) =>
+                                      msg.id === m.id
+                                        ? { ...msg, streaming: false }
+                                        : msg
+                                    )
+                                  )
+                                }
+                              />
+                            ) : (
+                              <MarkdownRenderer
+                                content={autoBoldKeywords(m.content)}
+                              />
+                            )}
+                            <span
+                              className={`text-xs opacity-70 ${
+                                isMobile ? "mt-1" : "mt-3"
+                              } block`}
+                            >
                               {m.timestamp.toLocaleTimeString()}
                             </span>
                           </div>
@@ -602,19 +824,71 @@ function ChatContent() {
                   )}
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div className="bg-gray-100 rounded-lg px-4 py-2">
-                        <div className="flex space-x-2">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
-                        </div>
+                      <div className="bg-gray-800 rounded-lg px-4 py-3">
+                        <motion.div
+                          className="flex space-x-2"
+                          initial="start"
+                          animate="end"
+                          variants={{
+                            start: {},
+                            end: {
+                              transition: {
+                                staggerChildren: 0.2,
+                              },
+                            },
+                          }}
+                        >
+                          <motion.div
+                            className="w-2 h-2 bg-gray-400 rounded-full"
+                            variants={{
+                              start: { y: "0%" },
+                              end: { y: "100%" },
+                            }}
+                            transition={{
+                              duration: 0.5,
+                              repeat: Infinity,
+                              repeatType: "reverse",
+                              ease: "easeInOut",
+                            }}
+                          />
+                          <motion.div
+                            className="w-2 h-2 bg-gray-400 rounded-full"
+                            variants={{
+                              start: { y: "0%" },
+                              end: { y: "100%" },
+                            }}
+                            transition={{
+                              duration: 0.5,
+                              repeat: Infinity,
+                              repeatType: "reverse",
+                              ease: "easeInOut",
+                            }}
+                          />
+                          <motion.div
+                            className="w-2 h-2 bg-gray-400 rounded-full"
+                            variants={{
+                              start: { y: "0%" },
+                              end: { y: "100%" },
+                            }}
+                            transition={{
+                              duration: 0.5,
+                              repeat: Infinity,
+                              repeatType: "reverse",
+                              ease: "easeInOut",
+                            }}
+                          />
+                        </motion.div>
                       </div>
                     </div>
                   )}
                   <div ref={messagesEndRef} />
                 </section>
                 {error && (
-                  <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#2a0000] border border-red-700 text-[#ffb3b3] rounded-lg px-5 py-3 shadow-lg flex items-center gap-3 z-[999]">
+                  <div
+                    className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#2a0000] border border-red-700 text-[#ffb3b3] rounded-lg ${
+                      isMobile ? "px-3 py-2 text-sm" : "px-5 py-3"
+                    } shadow-lg flex items-center gap-3 z-[999]`}
+                  >
                     <AlertTriangle className="text-red-500" />
                     <div className="flex flex-col">
                       <span className="font-semibold text-sm">Error</span>
@@ -637,7 +911,7 @@ function ChatContent() {
                     </button>
                   </div>
                 )}
-                <div className="flex items-center justify-center w-full absolute bottom-0">
+                <div className="flex items-center justify-center absolute bottom-0 w-full">
                   <form
                     onSubmit={handleSubmit}
                     onKeyDown={(e) => {
@@ -646,7 +920,9 @@ function ChatContent() {
                         handleSubmit(e);
                       }
                     }}
-                    className="bg-[#181818] p-2 rounded-2xl w-[55%]"
+                    className={`bg-[#0B1E26] p-2 rounded-t-2xl ${
+                      isMobile ? "w-screen" : "w-[55%]"
+                    }`}
                   >
                     <div className="flex flex-col gap-5 items-center justify-center">
                       <div className="flex items-center justify-center w-full px-4 mt-2 min-h-fit">
@@ -654,11 +930,12 @@ function ChatContent() {
                           ref={textareaRef}
                           value={input}
                           onChange={(e) => setInput(e.target.value)}
-                          // onKeyDown={handleKeyDown}
                           placeholder="Ask anything"
                           disabled={isLoading}
                           rows={1}
-                          className="text-white placeholder-[#5c5c5c] bg-transparent text-xl flex-1 rounded-lg outline-none w-full resize-none overflow-y-auto max-h-[20vh]"
+                          className={`text-[#e2e8f0] ${
+                            isMobile ? "text-base" : "text-xl"
+                          } flex-1 rounded-lg outline-none w-full resize-none overflow-y-auto max-h-[20vh]`}
                         />
                       </div>
                       <div className="flex items-center justify-between w-full">
@@ -666,15 +943,19 @@ function ChatContent() {
                           ref={fileUploaderRef}
                           key={sessionId}
                           sessionId={sessionId || ""}
+                          isDragging={isDragging}
+                          setIsDragging={setIsDragging}
                         />
                         <div>
                           <CustomDropdown marks={marks} setMarks={setMarks} />
                           <button
                             type="submit"
                             disabled={isLoading || !input.trim()}
-                            className="px-6 py-2 bg-transparent text-[#ffe243] rounded-lg font-semibold transition-opacity disabled:opacity-50"
+                            className={`bg-[#00141b] hover:bg-[#0B1E26] text-[#ffe655] rounded-lg font-semibold transition-opacity disabled:opacity-50 ${
+                              isMobile ? "px-4 py-2" : "px-6 py-2"
+                            }`}
                           >
-                            {isLoading ? "..." : "Send"}
+                            {isLoading ? <ProjectorIcon /> : <SendHorizonal />}
                           </button>
                         </div>
                       </div>

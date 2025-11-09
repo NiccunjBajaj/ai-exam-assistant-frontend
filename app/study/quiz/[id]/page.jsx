@@ -5,8 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Spline from "@splinetool/react-spline";
 import Link from "next/link";
+import { useAuth } from "@/app/components/AuthContext";
 
 export default function QuizPage() {
+  const { fetchWithAuth } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
   const { id } = useParams();
@@ -17,24 +19,29 @@ export default function QuizPage() {
   const [showResult, setShowResult] = useState(false);
   const [canRetryPartial, setCanRetryPartial] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     const fetchQuiz = async () => {
       if (!id) return;
 
-      const res = await fetch(`${BACKEND_URL}/quizzes/by-session/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetchWithAuth(
+        `${BACKEND_URL}/quizzes/by-session/${id}`
+      );
       const data = await res.json();
       setQuiz(data);
       setAnswers(Array(data.length).fill(""));
     };
 
     fetchQuiz();
-  }, [id, token]);
+  }, [id]);
 
   const handleOptionSelect = (index, optionIndex) => {
     const updated = [...answers];
@@ -49,12 +56,8 @@ export default function QuizPage() {
   };
 
   const evaluateAnswer = async (question, correctAnswer, userAnswer, marks) => {
-    const res = await fetch(`${BACKEND_URL}/evaluate-answer`, {
+    const res = await fetchWithAuth(`${BACKEND_URL}/evaluate-answer`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify({
         question,
         correct_answer: correctAnswer,
@@ -114,18 +117,14 @@ export default function QuizPage() {
     }));
 
     try {
-      await fetch(`${BACKEND_URL}/quiz-attempts/save`, {
+      await fetchWithAuth(`${BACKEND_URL}/quiz-attempts/save`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(payload),
       });
 
-      const statusRes = await fetch(`${BACKEND_URL}/quiz/${id}/draft-status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const statusRes = await fetchWithAuth(
+        `${BACKEND_URL}/quiz/${id}/draft-status`
+      );
       const status = await statusRes.json();
       setCanRetryPartial(status.can_retry_partial);
     } catch (err) {
@@ -151,27 +150,45 @@ export default function QuizPage() {
       {/* <div className="fixed z-[-9999] w-full">
         <Spline scene="https://prod.spline.design/8UR40oDmhAS3NI8V/scene.splinecode" />
       </div> */}
-      <div className="absolute top-[1vw] left-[2vw] bg-[#ffe243] hover:bg-[#606060] text-[#161616] rounded-[1vw] cursor-pointer">
+      <div
+        className={`absolute ${
+          isMobile ? "top-4 left-4" : "top-[1.3vw] left-[2vw]"
+        } bg-[#ffe655] hover:bg-[#606060] text-[#00141b] rounded-[1vw] cursor-pointer`}
+      >
         <Link
           href="/study/quiz"
-          className="text-[1.2vw] px-[0.5vw] flex items-center"
+          className={`${
+            isMobile ? "text-lg px-2" : "text-[1.2vw] px-[0.5vw]"
+          } flex items-center`}
         >
           <ArrowLeft />
           Back
         </Link>
       </div>
-      <main className="h-screen w-screen bg-[#161616] select1 noto">
+      <main className="h-screen w-screen bg-[#00141b] select1 noto">
         <div className="max-w-4xl mx-auto p-6 pt-[4vw]">
-          <h1 className="text-7xl font-bold mb-6 text-center text-[#ffe243]">
+          <h1
+            className={`${
+              isMobile ? "text-5xl my-8" : "text-7xl"
+            } font-bold mb-6 text-center text-[#ffe655]`}
+          >
             Quiz Attempt
           </h1>
 
           {!showResult ? (
-            <div className="mt-[4vw]">
+            <div className={`mt-[4vw] ${isMobile ? "p-2" : ""}`}>
               {quiz.length > 0 && (
-                <div className="p-4 bg-[#313131] rounded-lg">
-                  <p className="mb-2 text-2xl flex flex-col">
-                    <span className="font-[700] text-[#ffe243] text-2xl w-fit mb-2 pb-2">
+                <div className="p-4 bg-[#0b1e26] rounded-lg">
+                  <p
+                    className={`mb-2 ${
+                      isMobile ? "text-xl" : "text-2xl"
+                    } flex flex-col`}
+                  >
+                    <span
+                      className={`font-[700] text-[#ffe655] ${
+                        isMobile ? "text-xl" : "text-2xl"
+                      } w-fit mb-2 pb-2`}
+                    >
                       Q{currentIndex + 1} of {quiz.length}
                     </span>
                     <span className="w-fit pb-2">
@@ -181,7 +198,7 @@ export default function QuizPage() {
 
                   {quiz[currentIndex].type === "mcq" &&
                     quiz[currentIndex].options?.length === 4 && (
-                      <div className="space-y-2 text-[#e8e7e7]">
+                      <div className="space-y-2 text-[#e2e8f0]">
                         {quiz[currentIndex].options.map((opt, i) => {
                           const label = String.fromCharCode(65 + i);
                           return (
@@ -195,7 +212,11 @@ export default function QuizPage() {
                                 }
                                 className="bg-[#222222]"
                               />
-                              <span className="mr-2 text-lg">
+                              <span
+                                className={`mr-2 ${
+                                  isMobile ? "text-base" : "text-lg"
+                                }`}
+                              >
                                 {label}.<span className="ml-2">{opt}</span>
                               </span>
                             </label>
@@ -206,7 +227,9 @@ export default function QuizPage() {
 
                   {quiz[currentIndex].type === "short" && (
                     <textarea
-                      className="w-full outline-none bg-[#272727] text-[#ffe243] rounded p-2 mt-2 text-xl resize-none"
+                      className={`w-full outline-none bg-[#00141b] text-[#ffe655] rounded p-2 mt-2 ${
+                        isMobile ? "text-lg" : "text-xl"
+                      } resize-none`}
                       rows={4}
                       placeholder="Write your answer..."
                       value={answers[currentIndex]}
@@ -222,7 +245,7 @@ export default function QuizPage() {
                 <button
                   onClick={() => setCurrentIndex((i) => Math.max(i - 1, 0))}
                   disabled={currentIndex === 0}
-                  className="border rounded p-2 disabled:opacity-50 text-[#ffe243] cursor-pointer"
+                  className="border rounded p-2 disabled:opacity-50 text-[#ffe655] cursor-pointer"
                 >
                   <ArrowLeft size={25} />
                 </button>
@@ -232,7 +255,7 @@ export default function QuizPage() {
                     onClick={() =>
                       setCurrentIndex((i) => Math.min(i + 1, quiz.length - 1))
                     }
-                    className="border rounded p-2 text-[#ffe243] cursor-pointer"
+                    className="border rounded p-2 text-[#ffe655] cursor-pointer"
                   >
                     <ArrowRight size={25} />
                   </button>
@@ -240,7 +263,7 @@ export default function QuizPage() {
                   <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="px-4 py-2 text-[#161616] bg-[#606060] hover:bg-[#ffe243] rounded"
+                    className="px-4 py-2 text-[#00141b] bg-[#606060] hover:bg-[#ffe655] rounded"
                   >
                     {loading ? "Evaluating..." : "Submit"}
                   </button>
@@ -248,8 +271,14 @@ export default function QuizPage() {
               </div>
             </div>
           ) : (
-            <div className="mt-6">
-              <h2 className="text-2xl font-bold mb-4">📊 Quiz Results</h2>
+            <div className={`mt-6 ${isMobile ? "p-2" : ""}`}>
+              <h2
+                className={`${
+                  isMobile ? "text-xl" : "text-2xl"
+                } font-bold mb-4`}
+              >
+                📊 Quiz Results
+              </h2>
               <div className="p-4 rounded bg-[#222222] text-[#aeadad] font-medium mb-6">
                 🧾 You got{" "}
                 {results.filter((r) => r.verdict === "Correct").length} out of{" "}
@@ -267,11 +296,19 @@ export default function QuizPage() {
               <ul className="space-y-4">
                 {results.map((r, index) => (
                   <li key={index} className="p-4 rounded bg-[#3d3d3d]">
-                    <p className="font-medium text-lg">
+                    <p
+                      className={`font-medium ${
+                        isMobile ? "text-base" : "text-lg"
+                      }`}
+                    >
                       Q{index + 1}: {r.question}
                     </p>
                     <hr className="my-[0.5vw]" />
-                    <p className="text-lg text-[#a6a6a6] mt-1">
+                    <p
+                      className={`${
+                        isMobile ? "text-base" : "text-lg"
+                      } text-[#a6a6a6] mt-1`}
+                    >
                       <span className="font-bold text-[#fff]">Your Answer</span>
                       : {r.userAnswer}
                     </p>
@@ -288,12 +325,20 @@ export default function QuizPage() {
                       Verdict: {r.verdict}
                     </p>
                     <hr className="my-[0.5vw]" />
-                    <p className="text-lg text-[#a6a6a6] mt-1">
+                    <p
+                      className={`${
+                        isMobile ? "text-base" : "text-lg"
+                      } text-[#a6a6a6] mt-1`}
+                    >
                       <span className="font-bold text-[#fff]">Explanation</span>
                       : {r.explanation}
                     </p>
                     <hr className="my-[0.5vw]" />
-                    <p className="text-lg text-[#a6a6a6] mt-1">
+                    <p
+                      className={`${
+                        isMobile ? "text-base" : "text-lg"
+                      } text-[#a6a6a6] mt-1`}
+                    >
                       <span className="font-bold text-[#fff]">
                         Correct Answer
                       </span>

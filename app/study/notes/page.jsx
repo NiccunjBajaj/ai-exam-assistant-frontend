@@ -2,13 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Spline from "@splinetool/react-spline";
 import { v4 as uuidv4 } from "uuid";
-import { PencilLine, Trash2Icon } from "lucide-react";
+import { PencilLine, Trash2Icon, Upload, Download } from "lucide-react";
 import StudyNav from "@/app/components/StudyNav";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/app/components/AuthContext";
+import MarkdownIt from "markdown-it";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 export default function NotesPage() {
+  const { fetchWithAuth } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
 
@@ -25,9 +29,15 @@ export default function NotesPage() {
   const [targetSessionId, setTargetSessionId] = useState(null);
   const [newTitle, setNewTitle] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const filteredSessions = sessions.filter(
     (s) =>
@@ -36,29 +46,24 @@ export default function NotesPage() {
   );
 
   const fetchNotes = async () => {
-    const res = await fetch(`${BACKEND_URL}/notes`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetchWithAuth(`${BACKEND_URL}/notes`);
     const data = await res.json();
     setNotes(data);
   };
 
   useEffect(() => {
-    if (!token) return;
     fetchNotes();
-  }, [token]);
+  }, []);
 
   const fetchSessions = async () => {
-    const res = await fetch(`${BACKEND_URL}/study-sessions?type=notes`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetchWithAuth(`${BACKEND_URL}/study-sessions?type=notes`);
     const data = await res.json();
     setSessions(data);
   };
 
   useEffect(() => {
     fetchSessions();
-  }, [token]);
+  }, []);
 
   const handleUploadClick = () => inputRef.current?.click();
 
@@ -73,15 +78,20 @@ export default function NotesPage() {
     formData.append("file", file);
     formData.append("session_id", newId);
 
-    const res = await fetch(`${BACKEND_URL}/upload-file`, {
+    const res = await fetchWithAuth(`${BACKEND_URL}/upload-file`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
 
     const data = await res.json();
     setUploadedText(data.text);
     setLoading(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileChange({ target: { files: e.dataTransfer.files } });
   };
 
   const cancelGeneration = () => {
@@ -96,12 +106,8 @@ export default function NotesPage() {
     if (!uploadedText) return;
 
     setLoading(true);
-    const res = await fetch(`${BACKEND_URL}/generate-notes`, {
+    const res = await fetchWithAuth(`${BACKEND_URL}/generate-notes`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify({
         user_input: uploadedText,
         source: "file",
@@ -123,9 +129,8 @@ export default function NotesPage() {
 
   const deleteSession = async (sessionId) => {
     try {
-      await fetch(`${BACKEND_URL}/study-sessions/${sessionId}`, {
+      await fetchWithAuth(`${BACKEND_URL}/study-sessions/${sessionId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       setSessions((prev) => prev.filter((s) => s.id !== sessionId));
@@ -137,16 +142,14 @@ export default function NotesPage() {
 
   const handleRename = async (id, title) => {
     if (!title?.trim()) return;
-    const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`${BACKEND_URL}/study-rename-session/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ title }),
-      });
+      const res = await fetchWithAuth(
+        `${BACKEND_URL}/study-rename-session/${id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ title }),
+        }
+      );
       setSessions((prev) =>
         prev.map((s) => (s.id === id ? { ...s, title } : s))
       );
@@ -154,6 +157,31 @@ export default function NotesPage() {
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const handleDownloadDOCX = async (sessionId, title) => {
+    const res = await fetchWithAuth(
+      `${BACKEND_URL}/notes/by-session/${sessionId}`
+    );
+    const data = await res.json();
+    const note = data[0];
+
+    const docxRes = await fetchWithAuth(`${BACKEND_URL}/generate-docx`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content: note.content,
+        title: title,
+      }),
+    });
+    const blob = await docxRes.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title || "notes"}.docx`;
+    a.click();
   };
 
   useEffect(() => {
@@ -176,31 +204,71 @@ export default function NotesPage() {
   return (
     <>
       <StudyNav />
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]"
+            onDragOver={(e) => e.preventDefault()}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+          >
+            <div className="text-center text-white">
+              <Upload size={64} />
+              <p className="mt-4 text-2xl">Drop files to upload</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* <div className="fixed z-[-9999] w-full">
         <Spline scene="https://prod.spline.design/c6NMNa7uwCUsZ6kh/scene.splinecode" />
       </div> */}
-      <main className="h-screen bg-[#161616] pt-[5vw]">
-        <h1 className="text-8xl font-bold text-center mb-6 text-[#ffe243]">
+      <main
+        className="h-screen bg-[#00141b] pt-[5vw]"
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+      >
+        <h1
+          className={`${
+            isMobile ? "text-6xl" : "text-8xl"
+          } font-bold text-center my-6 text-[#ffe655]`}
+        >
           Study Notes
         </h1>
 
         {uploadedText && (
-          <div className="max-w-xl mx-auto mt-[5vw]">
-            <div className="flex items-center justify-center gap-4 mt-2 flex-wrap">
+          <div
+            className={`max-w-xl mx-auto ${
+              isMobile ? "mt-[10vw]" : "mt-[5vw]"
+            }`}
+          >
+            <div
+              className={`flex items-center justify-center gap-4 mt-2 ${
+                isMobile ? "flex-col" : "flex-wrap"
+              }`}
+            >
               <div className="w-full text-center">
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Enter a title for your notes"
-                  className="p-[0.7vw] bg-[#1e1e1e] rounded text-[#ffe243] w-[70%] text-[1.6vw] outline-none"
+                  className={`p-[0.7vw] bg-[#0B1E26] rounded text-[#ffe655] ${
+                    isMobile ? "w-full text-lg" : "w-[70%] text-[1.3rem]"
+                  } outline-none`}
                 />
               </div>
               <div className="mb-2">
                 <select
                   value={marks}
                   onChange={(e) => setMarks(parseInt(e.target.value))}
-                  className="p-[0.5vw] outline-none rounded cursor-pointer bg-[#1e1e1e] text-[0.9vw]"
+                  className={`p-[0.5vw] outline-none rounded cursor-pointer bg-[#0B1E26] ${
+                    isMobile ? "text-base" : "text-[0.9vw]"
+                  }`}
                 >
                   <option value={2}>2-marks</option>
                   <option value={5}>5-marks</option>
@@ -209,7 +277,9 @@ export default function NotesPage() {
                 <button
                   onClick={generateNotes}
                   disabled={loading}
-                  className={`text-[#161616] bg-[#606060] hover:bg-[#ffe243] px-[0.5vw] py-[0.5vw] rounded mx-[0.6vw] text-[0.9vw] ${
+                  className={`text-[#00141b] bg-[#606060] hover:bg-[#ffe655] px-[0.5vw] py-[0.5vw] rounded mx-[0.6vw] ${
+                    isMobile ? "text-base" : "text-[1rem]"
+                  } ${
                     loading ? "opacity-20 pointer-events-none" : "opacity-100"
                   }`}
                 >
@@ -218,34 +288,43 @@ export default function NotesPage() {
 
                 <button
                   onClick={cancelGeneration}
-                  className={`px-[0.7vw] py-[0.5vw] bg-[#606060] hover:bg-red-600 text-[#161616] rounded ${
-                    loading ? "hidden" : ""
-                  }`}
+                  className={`px-[0.7vw] py-[0.5vw] bg-[#606060] hover:bg-red-600 text-[#00141b] ${
+                    isMobile ? "text-base" : "text-[1rem]"
+                  } rounded ${loading ? "hidden" : ""}`}
                 >
                   Cancel
                 </button>
               </div>
             </div>
-            <p className="text-sm text-gray-300 ml-[4.5vw]">
+            <p
+              className={`text-sm text-[e2e8f0] ${
+                isMobile ? "ml-0 text-center" : "ml-[4.5vw]"
+              }`}
+            >
               Extracted from: <strong>{file?.name}</strong>
             </p>
           </div>
         )}
 
-        <div className="flex flex-col gap-4 px-[15vw]">
+        <div
+          className={`flex flex-col gap-4 ${isMobile ? "px-4" : "px-[15vw]"}`}
+        >
           <input
             type="text"
             placeholder="Search notes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="mx-auto px-4 py-3 w-1/3 bg-[#1e1e1e] rounded-md outline-none text-[#ffe243]"
+            className={`mx-auto px-4 py-3 ${
+              isMobile ? "w-full" : "w-1/3"
+            } bg-[#0B1E26] rounded-md outline-none text-[#ffe655]`}
           />
 
-          <div className="grid grid-cols-4 gap-4 max-h-[80vh] overflow-auto p-4 hover_target rounded-lg mod-scrollbar">
+          <div
+            className={`grid ${
+              isMobile ? "grid-cols-1" : "grid-cols-4"
+            } gap-4 max-h-[80vh] overflow-auto p-4 hover_target rounded-lg mod-scrollbar`}
+          >
             {filteredSessions.map((s) => {
-              const randomNum = Math.floor(Math.random() * 4) + 1;
-              const bgImage = `/img-${randomNum}.jpeg`;
-
               return (
                 <>
                   <AnimatePresence>
@@ -260,25 +339,25 @@ export default function NotesPage() {
                           initial={{ scale: 0.8 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0.8 }}
-                          className="bg-[#1f1f1f] text-white p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
+                          className="bg-[#00141b] text-[#e2e8f0] p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
                         >
                           <h3 className="text-lg font-semibold mb-3">
-                            Delete Note?
+                            Delete Chat?
                           </h3>
                           <p className="text-sm mb-6 opacity-80">
-                            Are you sure you want to delete this note
+                            Are you sure you want to delete this chat
                             permanently?
                           </p>
                           <div className="flex justify-end gap-3">
                             <button
                               onClick={() => setShowDeleteModal(false)}
-                              className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600"
+                              className="px-4 py-2 rounded-lg bg-[#0B1E26] hover:bg-gray-600"
                             >
                               Cancel
                             </button>
                             <button
                               onClick={() => {
-                                deleteSession(s.id);
+                                deleteSession(targetSessionId);
                                 setShowDeleteModal(false);
                               }}
                               className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700"
@@ -303,7 +382,7 @@ export default function NotesPage() {
                           initial={{ scale: 0.8 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0.8 }}
-                          className="bg-[#1f1f1f] text-white p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
+                          className="bg-[#00141b] text-[#e2e8f0] p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
                         >
                           <h3 className="text-lg font-semibold mb-3">
                             Rename Chat
@@ -321,12 +400,12 @@ export default function NotesPage() {
                               }
                             }}
                             onChange={(e) => setNewTitle(e.target.value)}
-                            className="w-full p-3 rounded-lg bg-[#121212] border border-[#444] text-[#ffe243] outline-none mb-5"
+                            className="w-full p-3 rounded-lg bg-[#00141b] border border-[#e2e8f0] text-[#ffe655] outline-none mb-5"
                           />
                           <div className="flex justify-end gap-3">
                             <button
                               onClick={() => setShowRenameModal(false)}
-                              className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600"
+                              className="px-4 py-2 rounded-lg bg-[#0B1E26] hover:bg-gray-600"
                             >
                               Cancel
                             </button>
@@ -335,7 +414,7 @@ export default function NotesPage() {
                                 handleRename(targetSessionId, newTitle);
                                 setShowRenameModal(false);
                               }}
-                              className="px-4 py-2 rounded-lg bg-[#ffe243] text-black font-semibold hover:bg-[#ffeb6b]"
+                              className="px-4 py-2 rounded-lg bg-[#f1e596] text-black font-semibold hover:bg-[#ffe655]"
                             >
                               Save
                             </button>
@@ -344,16 +423,12 @@ export default function NotesPage() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+
                   <div
                     key={s.id}
-                    className="flex flex-col justify-end rounded-lg p-2 shadow hover:shadow-md cursor-pointer text-[#ffe243] bg-[#ffe34385] hover:scale-[1.04] backdrop-blur-[3px] mod-scrollbar transition-all duration-[0.4s]"
+                    className="flex flex-col justify-end rounded-lg p-2 shadow hover:shadow-md cursor-pointer text-[#ffe655] bg-[#0B1E26] hover:scale-[1.04] backdrop-blur-[3px] mod-scrollbar transition-all duration-[0.4s]"
                   >
                     <div onClick={() => router.push(`/study/notes/${s.id}`)}>
-                      <img
-                        src={bgImage}
-                        className="object-cover brightness-75 rounded-md"
-                        alt=""
-                      />
                       <div className="bg-black/50 p-2 rounded-md mt-2">
                         <h2 className="text-2xl font-semibold truncate">
                           {s.title}
@@ -370,20 +445,32 @@ export default function NotesPage() {
                           setNewTitle(s.title);
                           setShowRenameModal(true);
                         }}
-                        className="p-2 rounded-md hover:bg-white/10"
+                        className="p-2 rounded-md hover:bg-white/30"
                       >
                         <PencilLine
-                          size={18}
+                          size={20}
                           className="text-white cursor-pointer"
                         />
                       </button>
                       <button
-                        onClick={() => setShowDeleteModal(true)}
-                        className="p-2 rounded-md hover:bg-white/10"
+                        onClick={() => {
+                          setTargetSessionId(s.id);
+                          setShowDeleteModal(true);
+                        }}
+                        className="p-2 rounded-md hover:bg-white/30"
                       >
                         <Trash2Icon
-                          size={18}
+                          size={20}
                           className="text-red-600 cursor-pointer"
+                        />
+                      </button>
+                      <button
+                        onClick={() => handleDownloadDOCX(s.id, s.title)}
+                        className="p-2 rounded-md hover:bg-white/30"
+                      >
+                        <Download
+                          size={20}
+                          className="text-white cursor-pointer"
                         />
                       </button>
                     </div>
@@ -393,7 +480,7 @@ export default function NotesPage() {
             })}
 
             {filteredSessions.length === 0 && (
-              <p className="text-gray-500">No notes found.</p>
+              <p className="text-[#e2e8f0]">No notes found.</p>
             )}
           </div>
         </div>
@@ -407,9 +494,11 @@ export default function NotesPage() {
         />
         <button
           onClick={handleUploadClick}
-          className="fixed bottom-6 right-6 hover:bg-[#606060] bg-[#ffe34385] text-[#161616] hover:text-black px-5 py-3 rounded-full shadow-lg text-2xl transition-all duration-[0.4s]"
+          className={`fixed bottom-6 right-6 hover:bg-[#f1e596] bg-[#ffe655] text-[#00141b] cursor-pointer ${
+            isMobile ? "px-4 py-2 text-lg" : "px-5 py-3 text-2xl"
+          } rounded-full shadow-lg transition-all duration-[0.4s] flex items-center gap-3`}
         >
-          📎 Upload File
+          <Upload /> {isMobile ? "" : "Upload File"}
         </button>
       </main>
     </>

@@ -41,12 +41,12 @@ export default function Verify() {
   }, [token]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#161616] text-white">
-      <div className="p-8 rounded-2xl bg-[#1e1e1e] text-center max-w-md">
+    <main className="min-h-screen flex items-center justify-center bg-[#00141b] text-white">
+      <div className="p-8 rounded-2xl bg-[#0b1e26] text-center max-w-md">
         {status === "pending" && <p>Verifying your email...</p>}
         {status === "success" && (
           <>
-            <h2 className="text-2xl font-semibold text-[#ffe243]">
+            <h2 className="text-2xl font-semibold text-[#ffe655]">
               Success ✅
             </h2>
             <p className="mt-4">{msg}</p>
@@ -58,7 +58,7 @@ export default function Verify() {
             <p className="mt-4">{msg}</p>
             <button
               onClick={() => router.push("/")}
-              className="mt-6 bg-[#ffe243] text-[#161616] px-4 py-2 rounded-lg font-semibold"
+              className="mt-6 bg-[#ffe655] text-[#00141b] px-4 py-2 rounded-lg font-semibold"
             >
               Go Home
             </button>

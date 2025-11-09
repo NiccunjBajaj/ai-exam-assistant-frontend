@@ -13,7 +13,7 @@ if (!gsap.core.globals().ScrollTrigger) {
 
 const Card = ({ title, span, copy, index }) => {
   return (
-    <div className="card relative text-[#161616]" id={`card-${index + 1}`}>
+    <div className="card relative text-[#00141b]" id={`card-${index + 1}`}>
       <div className="card-inner rounded-t-4xl relative will-change-transform w-full h-full p-[3vw] flex gap-[5vw]">
         <div className="card-content flex-3">
           <h1 className="text-[5vw] font-[600] leading-[1] mb-[4vw]">
@@ -36,7 +36,7 @@ const Card = ({ title, span, copy, index }) => {
 
 const Hero = () => {
   const containerRef = useRef();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
 
   const cards = [
     {
@@ -368,7 +368,7 @@ const Hero = () => {
   return (
     <div className="font-[jost] select">
       <div className="overflow-hidden">
-        <section className="hero flex flex-col gap-7 justify-center items-center w-screen bg-[#161616] relative">
+        <section className="hero flex flex-col gap-7 justify-center items-center w-screen bg-[#000141b] relative">
           {/* <img
             className="absolute top-0 left-0 w-full h-full object-cover z-[-99]"
             src="/bg.png"
@@ -379,21 +379,21 @@ const Hero = () => {
               <h1 className="leading-[11vw] font-[federo] noselect flex flex-col justify-center items-center">
                 <div className="text-[20vw] flex">
                   <div className="word scale-0">L</div>
-                  <div className="text-[#ffe243] word scale-0">e</div>
+                  <div className="text-[#ffe655] word scale-0">e</div>
                   <div className="word scale-0">a</div>
                   <div className="word scale-0">r</div>
                   <div className="word scale-0">n</div>
-                  <div className="text-[#ffe243] word scale-0">e</div>
-                  <div className="text-[#ffe243] word scale-0">e</div>
+                  <div className="text-[#ffe655] word scale-0">e</div>
+                  <div className="text-[#ffe655] word scale-0">e</div>
                 </div>
                 <div className="overflow-hidden leading-[11vw] flex flex-col items-center justify-center w-full">
                   <div className="text-[7.5vw] tracking-[-0.5vw] font-[jost] font-[200] uppercase translate-y-[100vh] text">
-                    a t<span className="text-[#ffe243]">oo</span>l b
-                    <span className="text-[#ffe243]">o</span>x
+                    a t<span className="text-[#ffe655]">oo</span>l b
+                    <span className="text-[#ffe655]">o</span>x
                   </div>
                   <div className="text-[2.5vw] leading-0 font-[jost] tracking-wide uppercase translate-y-[100vh] text pb-[1vw]">
-                    for <span className="text-[#ffe243]">st</span>uden
-                    <span className="text-[#ffe243]">ts</span>
+                    for <span className="text-[#ffe655]">st</span>uden
+                    <span className="text-[#ffe655]">ts</span>
                   </div>
                 </div>
               </h1>
@@ -401,7 +401,7 @@ const Hero = () => {
                 ""
               ) : (
                 <a
-                  className="bg-[#ffe243] text-[#161616] hover:bg-[#606060] hover:text-[#fff] w-fit p-[0.4vw] px-[1vw] text-[1.5vw]  rounded-4xl mx-auto mt-[2vw] cta transition-all duration-[0.2s] scale-0"
+                  className="bg-[#ffe655] text-[#00141b] hover:bg-[#606060] hover:text-[#fff] w-fit p-[0.4vw] px-[1vw] text-[1.5vw] rounded-4xl mx-auto mt-[2vw] cta transition-all duration-[0.2s] scale-0"
                   href="/login"
                 >
                   Get Started
@@ -412,7 +412,7 @@ const Hero = () => {
         </section>
       </div>
 
-      <section className="about rounded-t-[4vw] relative bg-[#f2f2f2] flex flex-col gap-[2vw]">
+      <section className="about rounded-t-[4vw] relative bg-[#E2E8F0] flex flex-col gap-[2vw]">
         <h1 className="animate-text heading font-[jost] font-[100]">
           Your AI-powered exam assistant, designed to help students learn
           smarter and faster. It provides instant answers tailored to exam
@@ -420,13 +420,13 @@ const Hero = () => {
         </h1>
         <a
           href="/chat"
-          className="p-4 bg-[#161616] hover:bg-[#ffe34385] text-[#efefef] hover:text-[#000000] text-2xl font-medium rounded-full transition-all duration-[0.3s]"
+          className="p-4 bg-[#F1E596] hover:bg-[#ffe655] text-[#000000] text-2xl font-medium rounded-full transition-all duration-[0.3s]"
         >
           Get Started &#8599;
         </a>
       </section>
 
-      <section className="bg-[#161616] services relative w-full h-[100svh] flex flex-col justify-center items-center overflow-hidden">
+      <section className="bg-[#000141b] services relative w-full h-[100svh] flex flex-col justify-center items-center overflow-hidden">
         <div className="service-header">
           <img
             className="w-[100vw] h-[100svh] object-cover"
@@ -450,14 +450,14 @@ const Hero = () => {
         </div>
       </section>
       <div ref={containerRef}>
-        <section className="intro services-copy relative mt-[155svh] pt-[3vw] pr-[3vw] pb-[25svh] pl-[3vw] text-center bg-[#fff] rounded-t-[4vw] flex flex-col items-center gap-[2vw]">
+        <section className="intro services-copy relative mt-[155svh] pt-[3vw] pr-[3vw] pb-[25svh] pl-[3vw] text-center bg-[#E2E8F0] rounded-t-[4vw] flex flex-col items-center gap-[2vw]">
           <h1 className="animate-text heading font-[jost]">
             Generate concise notes, and create flashcards for quick revision,
             making studying more personalized, efficient, and engaging.
           </h1>
           <a
             href="/chat"
-            className="p-4 bg-[#161616] hover:bg-[#ffe34385] text-[#efefef] hover:text-[#000000] text-2xl font-medium rounded-full transition-all duration-[0.3s]"
+            className="p-4 bg-[#F1E596] hover:bg-[#ffe655] text-[#000000] text-2xl font-medium rounded-full transition-all duration-[0.3s]"
           >
             Explore &#8599;
           </a>
@@ -467,10 +467,10 @@ const Hero = () => {
             <Card key={index} {...card} index={index} />
           ))}
         </section>
-        <section className="outro relative w-screen h-[100svh] overflow-hidden flex flex-col items-center justify-center p-[3vw] bg-[#161616]">
+        <section className="outro relative w-screen h-[100svh] overflow-hidden flex flex-col items-center justify-center p-[3vw] bg-[#000141b]">
           <h1 className="text-[20vw] font-[600] leading-[1] text-center">
-            L<span className="text-[#ffe243]">e</span>arn
-            <span className="text-[#ffe243]">ee</span>
+            L<span className="text-[#ffe655]">e</span>arn
+            <span className="text-[#ffe655]">ee</span>
           </h1>
           <AnimatedCopy>
             <p className="text-[2vw] w-[60%]">
@@ -495,9 +495,9 @@ const Hero = () => {
             <div className="header-content w-[60%] flex flex-col items-center text-center gap-[3vw] will-change-transform will-change-opacity translate-y-[-100px] opacity-0 mb-[2vw]">
               <h1 className="text-[5vw] font-[600] leading-[1] text-center">
                 Find the answers with{" "}
-                <span className="text-[#ffe243]">Proff</span>
+                <span className="text-[#ffe655]">Proff</span>
                 <span>'</span>
-                <span className="text-[#ffe243]">s</span> assistance
+                <span className="text-[#ffe655]">s</span> assistance
               </h1>
               <p>
                 Seek the answers you couldn't find — structures the ones you
@@ -545,144 +545,23 @@ const Hero = () => {
             </div>
           </div>
 
-          <div className="search-bar absolute top-[50%] left-[50%] translate-x-[-50%] ranslate-y-[-50%] w-[4vw] h-[4vw] bg-[#f6dd4d] rounded-4xl opacity-0 flex items-center will-change-transform will-change-opacity will-change-width will-change-height hover:bg-[#606060] cursor-pointer">
+          <div className="search-bar absolute top-[50%] left-[50%] translate-x-[-50%] ranslate-y-[-50%] w-[4vw] h-[4vw] bg-[#F1E596] rounded-4xl opacity-0 flex items-center will-change-transform will-change-opacity will-change-width will-change-height hover:bg-[#ffe655] cursor-pointer">
             <a href="/chat" className="flex justify-center w-full">
-              <p className="text-[#161616] relative opacity-0 will-change-opacity">
+              <p className="text-[#000] relative opacity-0 will-change-opacity">
                 Ask Proff
               </p>
             </a>
           </div>
         </section>
 
-        <footer className="outro relative overflow-hidden flex rounded-t-4xl bg-[#fff]">
+        <footer className="outro relative overflow-hidden flex rounded-t-4xl bg-[#E2E8F0]">
           <div className="w-[30vw] h-[30vw] bg-[url('/bee.svg')] bg-no-repeat bg-contain bg-center"></div>
-          <h1 className="text-[15vw] text-[#161616] font-[600] leading-[1]">
-            L<span className="text-[#ffe343d3]">e</span>anr
-            <span className="text-[#ffe343d3]">ee</span>
+          <h1 className="text-[15vw] text-[#00141b] font-[600] leading-[1]">
+            L<span className="text-[#ffe655]">e</span>arn
+            <span className="text-[#ffe655]">ee</span>
           </h1>
-          <h1 className="text-[#161616] lowercase">space</h1>
+          <h1 className="text-[#00141b] lowercase">space</h1>
         </footer>
-
-        {/* <footer className="outro relative w-screen h-screen p-[3vw] bg-[#161616]">
-          <h1 className="text-[5vw] font-[600] leading-[1] mb-[0]">Leanree</h1>
-        </footer> */}
-
-        {/* <footer className="select font-[mouse] rounded-t-[4vw] bg-[#fff] w-[100vw] h-screen text-[#161616] flex flex-col justify-between items-center p-[2vw]">
-        <h1 className="text-[8vw] uppercase leading-[4vw]">
-          The <span className="text-[#ffe34385]">future</span> is in Your
-          Hands
-        </h1>
-        <div className="flex w-[100vw] justify-between">
-          <p>&copy; 2025 Oblivon Decks</p>
-          <p>All rights reserved.</p>
-        </div>
-      </footer> */}
-        {/* <section className=" bg-[#161616] font-[jost] noselect">
-        <div className="service">
-        <div className="col">
-            <div className="service-copy leading-[5vw]">
-              <h3 className="text-[5vw] font-[federo] tracking-wider">
-                Chat<span className="text-[#ffe243] uppercase">bot</span>
-              </h3>
-              <AnimatedCopy>
-                <p>
-                  <span className="text-[#ffe243]">Proff</span> is an
-                  intelligent AI-powered study assistant designed to simplify
-                  exam preparation. It provides instant answers based on mark
-                  distribution and can also generate structured notes and
-                  flashcards. With <span className="text-[#ffe243]">Proff</span>
-                  , students can stay productive, understand concepts faster,
-                  and prepare efficiently for exams with a focused learning
-                  support.
-                </p>
-              </AnimatedCopy>
-            </div>
-          </div>
-          <div className="col">
-            <img src="/chat.png" alt="" />
-          </div>
-        </div>
-
-        <div className="service">
-          <div className="col">
-            <img src="/rev.png" alt="" />
-          </div>
-          <div className="col">
-            <div className="service-copy leading-[5vw]">
-              <h3 className="text-[4vw] font-[federo] tracking-wider">
-                Re<span className="text-[#ffe243]">vision</span>
-              </h3>
-              <AnimatedCopy>
-                <p>
-                  Revision becomes effortless with{" "}
-                  <span className="text-[#ffe243] uppercase">learnee</span>. It
-                  helps students quickly review key concepts using AI-generated
-                  notes and flashcards tailored to their syllabus and mark
-                  distribution. With smart summaries, and instant answers, our
-                  platform ensures every revision session is focused, efficient,
-                  and perfectly aligned with exam goals.
-                </p>
-              </AnimatedCopy>
-            </div>
-          </div>
-        </div>
-
-        <div className="service">
-          <div className="col">
-            <div className="service-copy">
-              <h3 className="text-[5vw] font-[federo] tracking-wider">
-                Qui<span className="text-[#ffe243]">zzz</span>
-              </h3>
-              <AnimatedCopy>
-                <p>
-                  Quiz System lets students test their understanding through
-                  personalized quizzes generated from{" "}
-                  <span className="text-[#ffe243]">
-                    Chat Discussions, Study Materials, or Uploaded Files
-                  </span>
-                  . Each quiz follows the exam’s mark distribution and includes
-                  instant feedback to help students identify weak areas, improve
-                  retention, and make their preparation more focused and
-                  effective.
-                </p>
-              </AnimatedCopy>
-            </div>
-          </div>
-          <div className="col">
-            <img src="/quiz.png" alt="" />
-          </div>
-        </div>
-
-        <div className="service">
-          <div className="col">
-            <img src="/study.png" alt="" />
-          </div>
-          <div className="col">
-            <div className="service-copy leading-[5vw]">
-              <h3 className="text-[5vw] font-[federo] tracking-wider">Study</h3>
-              <AnimatedCopy>
-                <p>
-                  Study on Leanree is your personalized learning hub — where AI
-                  transforms chat into quizzez, uploaded files into organized
-                  notes and flashcards. It helps you revise smarter with concise
-                  summaries and question breakdowns, making exam preparation
-                  efficient and engaging.
-                </p>
-              </AnimatedCopy>
-            </div>
-          </div>
-        </div>
-        <footer className="select font-[mouse] rounded-t-[4vw] bg-[#fff] w-[100vw] h-screen text-[#161616] flex flex-col justify-between items-center p-[2vw]">
-          <h1 className="text-[8vw] uppercase leading-[4vw]">
-            The <span className="text-[#ffe34385]">future</span> is in Your
-            Hands
-          </h1>
-          <div className="flex w-[100vw] justify-between">
-            <p>&copy; 2025 Oblivon Decks</p>
-            <p>All rights reserved.</p>
-          </div>
-        </footer>
-      </section> */}
       </div>
     </div>
   );

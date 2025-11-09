@@ -148,7 +148,7 @@ export default function LoginRegisterPage() {
 
   // ---------------- UI ----------------
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#161616] px-4">
+    <main className="min-h-screen flex items-center justify-center bg-[#00141b] px-4">
       <div className="flex w-[70vw] justify-center max-w-5xl h-[70vh] relative overflow-hidden rounded-3xl shadow-lg">
         <AnimatePresence mode="wait">
           {isLogin ? (
@@ -158,11 +158,13 @@ export default function LoginRegisterPage() {
               animate={{ width: "65%", opacity: 1 }}
               exit={{ width: "35%", opacity: 0 }}
               transition={{ duration: 0.6, ease: "easeInOut" }}
-              className="bg-[#1e1e1e] text-white rounded-r-3xl p-[3vw] flex flex-col justify-center"
+              className="bg-[#0B1E26] text-white rounded-r-3xl p-[3vw] flex flex-col justify-center"
             >
-              <h1 className="text-[3vw] text-[#ffe243] mb-[2vw]">Learnee</h1>
+              <h1 className="text-[3vw] text-[#ffe655] mb-[2vw] font-[federo]">
+                Learnee
+              </h1>
               {error && (
-                <div className="bg-red-600/30 text-[#ffe243] px-4 py-2 rounded mb-3 text-sm">
+                <div className="bg-red-600/30 text-[#ffe655] px-4 py-2 rounded mb-3 text-sm">
                   {error}
                 </div>
               )}
@@ -183,12 +185,12 @@ export default function LoginRegisterPage() {
                   />
                   <button
                     type="submit"
-                    className="w-full bg-[#606060] hover:bg-[#ffe243] hover:text-[#161616] text-white py-2 rounded font-semibold"
+                    className="w-full bg-[#F1E596] hover:bg-[#ffe655] text-[#00141b] py-2 rounded font-semibold"
                   >
                     Send Reset Link
                   </button>
                   <p
-                    className="text-sm text-[#ffe243] mt-2 cursor-pointer underline"
+                    className="text-sm text-[#ffe655] mt-2 cursor-pointer underline"
                     onClick={() => setShowForgot(false)}
                   >
                     Back to login
@@ -206,7 +208,7 @@ export default function LoginRegisterPage() {
                         setLoginData({ ...loginData, email: e.target.value })
                       }
                       required
-                      className="w-full px-4 py-2 rounded bg-[#606060] outline-none"
+                      className="w-full px-4 py-2 rounded bg-[#F1E596] outline-none text-[#00141b]"
                     />
                     <input
                       type="password"
@@ -216,11 +218,11 @@ export default function LoginRegisterPage() {
                         setLoginData({ ...loginData, password: e.target.value })
                       }
                       required
-                      className="w-full px-4 py-2 rounded bg-[#606060] outline-none"
+                      className="w-full px-4 py-2 rounded bg-[#F1E596] outline-none text-[#00141b]"
                     />
                     <div className="flex justify-between items-center mt-2">
                       <span
-                        className="text-sm text-[#ffe243] cursor-pointer underline"
+                        className="text-sm text-[#e2e8f0] cursor-pointer underline"
                         onClick={() => setShowForgot(true)}
                       >
                         Forgot Password?
@@ -230,7 +232,7 @@ export default function LoginRegisterPage() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className={`w-full bg-[#606060] hover:bg-[#ffe243] hover:text-[#161616] text-white py-2 rounded font-semibold transition-all ${
+                      className={`w-full bg-[#F1E596] hover:bg-[#ffe655] text-[#00141b] py-2 rounded font-semibold transition-all ${
                         isLoading ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     >
@@ -238,12 +240,12 @@ export default function LoginRegisterPage() {
                     </button>
                   </form>
 
-                  <div className="my-4 text-center text-[#ffe243]">or</div>
+                  <div className="my-4 text-center text-[#e2e8f0]">or</div>
                   <div className="mx-auto w-fit">
                     <GoogleLoginButton />
                   </div>
 
-                  <p className="text-center text-sm mt-4 text-[#ffe243]">
+                  <p className="text-center text-sm mt-4 text-[#e2e8f0]">
                     Don’t have an account?{" "}
                     <span
                       onClick={() => setIsLogin(false)}
@@ -263,13 +265,13 @@ export default function LoginRegisterPage() {
               animate={{ width: "65%", opacity: 1 }}
               exit={{ width: "35%", opacity: 0 }}
               transition={{ duration: 0.6, ease: "easeInOut" }}
-              className="bg-[#ffe243] text-[#161616] rounded-r-3xl p-[3vw] flex flex-col justify-center"
+              className="bg-[#e2e8f0] text-[#00141b] rounded-r-3xl p-[3vw] flex flex-col justify-center"
             >
               <h1 className="text-[2.5vw] font-semibold mb-[1vw]">
                 Create Account
               </h1>
               {error && (
-                <div className="bg-red-600/30 text-[#161616] px-4 py-2 rounded mb-3 text-sm">
+                <div className="bg-red-600/30 text-[#00141b] px-4 py-2 rounded mb-3 text-sm">
                   {error}
                 </div>
               )}
@@ -286,7 +288,7 @@ export default function LoginRegisterPage() {
                     })
                   }
                   required
-                  className="w-full px-4 py-2 rounded bg-[#fff] outline-none"
+                  className="w-full px-4 py-2 rounded bg-[#e2e8f0] outline-none"
                 />
                 <input
                   type="email"
@@ -296,7 +298,7 @@ export default function LoginRegisterPage() {
                     setRegisterData({ ...registerData, email: e.target.value })
                   }
                   required
-                  className="w-full px-4 py-2 rounded bg-[#fff] outline-none"
+                  className="w-full px-4 py-2 rounded bg-[#e2e8f0] outline-none"
                 />
                 <input
                   type="password"
@@ -309,7 +311,7 @@ export default function LoginRegisterPage() {
                     })
                   }
                   required
-                  className="w-full px-4 py-2 rounded bg-[#fff] outline-none"
+                  className="w-full px-4 py-2 rounded bg-[#e2e8f0] outline-none"
                 />
                 <input
                   type="password"
@@ -322,13 +324,13 @@ export default function LoginRegisterPage() {
                     })
                   }
                   required
-                  className="w-full px-4 py-2 rounded bg-[#fff] outline-none"
+                  className="w-full px-4 py-2 rounded bg-[#e2e8f0] outline-none"
                 />
 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full bg-[#161616] text-[#ffe243] hover:bg-[#606060] hover:text-[#fff] py-2 rounded font-semibold transition-all ${
+                  className={`w-full bg-[#F1E596] hover:bg-[#ffe655] text-[#00141b] py-2 rounded font-semibold transition-all ${
                     isLoading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
@@ -336,12 +338,12 @@ export default function LoginRegisterPage() {
                 </button>
               </form>
 
-              <div className="my-4 text-center text-[#161616]">or</div>
+              <div className="my-4 text-center text-[#00141b]">or</div>
               <div className="mx-auto w-fit">
                 <GoogleLoginButton />
               </div>
 
-              <p className="text-center text-sm mt-4 text-[#161616]">
+              <p className="text-center text-sm mt-4 text-[#00141b]">
                 Already have an account?{" "}
                 <span
                   onClick={() => setIsLogin(true)}

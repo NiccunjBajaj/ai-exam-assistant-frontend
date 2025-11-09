@@ -60,7 +60,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#161616] px-4">
+    <main className="min-h-screen flex items-center justify-center bg-[#00141b] px-4">
       <div className="flex w-[70vw] justify-center max-w-5xl h-[70vh] relative overflow-hidden rounded-3xl shadow-lg">
         <AnimatePresence mode="wait">
           <motion.div
@@ -69,19 +69,19 @@ export default function ResetPassword() {
             animate={{ width: "65%", opacity: 1 }}
             exit={{ width: "35%", opacity: 0 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="bg-[#1e1e1e] text-white rounded-r-3xl p-[3vw] flex flex-col justify-center"
+            className="bg-[#1e1e1e] text-[#e2e8f0] rounded-r-3xl p-[3vw] flex flex-col justify-center"
           >
-            <h1 className="text-[3vw] text-[#ffe243] mb-[2vw] text-center">
+            <h1 className="text-[3vw] text-[#ffe655] mb-[2vw] text-center">
               Reset Password
             </h1>
 
             {error && (
-              <div className="bg-red-600/30 text-[#ffe243] px-4 py-2 rounded mb-3 text-sm text-center">
+              <div className="bg-red-600/30 text-[#ffe655] px-4 py-2 rounded mb-3 text-sm text-center">
                 {error}
               </div>
             )}
             {success && (
-              <div className="bg-green-600/30 text-[#161616] px-4 py-2 rounded mb-3 text-sm text-center">
+              <div className="bg-green-600/30 text-[#00141b] px-4 py-2 rounded mb-3 text-sm text-center">
                 {success}
               </div>
             )}
@@ -107,7 +107,7 @@ export default function ResetPassword() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full bg-[#606060] hover:bg-[#ffe243] hover:text-[#161616] text-white py-2 rounded font-semibold transition-all ${
+                className={`w-full bg-[#606060] hover:bg-[#ffe655] hover:text-[#00141b] text-white py-2 rounded font-semibold transition-all ${
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -116,7 +116,7 @@ export default function ResetPassword() {
             </form>
 
             <p
-              className="text-center text-sm mt-4 text-[#ffe243] cursor-pointer underline"
+              className="text-center text-sm mt-4 text-[#ffe655] cursor-pointer underline"
               onClick={() => router.push("/login")}
             >
               Back to Login

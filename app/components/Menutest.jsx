@@ -7,9 +7,10 @@ import Link from "next/link";
 import {
   BotIcon,
   CurrencyIcon,
-  GpuIcon,
   HomeIcon,
   LibraryBig,
+  MenuIcon,
+  User,
   XIcon,
 } from "lucide-react";
 import { useAuth } from "./AuthContext";
@@ -21,7 +22,7 @@ const navLinks = [
     href: "/chat",
     label: "PROFF",
     data: "proff",
-    icon: <GpuIcon size={130} />,
+    icon: <BotIcon size={130} />,
   },
   {
     href: "/study",
@@ -37,6 +38,14 @@ const navLinks = [
   },
 ];
 
+const navLinksShort = [
+  { href: "#", label: "INSTAGRAM" },
+  { href: "#", label: "YOUTUBE" },
+  { href: "#", label: "TWITTER" },
+];
+
+// import "./Menu.css";
+
 const Menu = () => {
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const pathname = usePathname();
@@ -48,14 +57,6 @@ const Menu = () => {
   const tl = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogOutModal, setShowLogOutModal] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   const isStudySubRoute = pathname.startsWith("/study/");
   const isChatRoute = pathname.startsWith("/chat");
@@ -108,6 +109,21 @@ const Menu = () => {
     fetchPlan();
   }, []);
 
+  //Animations
+  useGSAP(() => {
+    gsap.to(".bar", {
+      width: "100%",
+      stagger: 0.1,
+      duration: 0.2,
+      delay: 0.6,
+    });
+    gsap.to(".image", {
+      x: 0,
+      duration: 0.2,
+      delay: 0.6,
+    });
+  }, []);
+
   const handleLogout = () => {
     logout();
     window.location.reload(); // 🔄 full UI reset after logout
@@ -136,13 +152,13 @@ const Menu = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[1000]"
+            className="fixed inset-0 bg-[#0000005b] backdrop-blur-[4px] flex items-center justify-center z-[1000]"
           >
             <motion.div
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
-              className="bg-[#0b1e26] text-[#e2e8f0] p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
+              className="bg-[#1f1f1f] text-white p-6 rounded-2xl w-[90%] sm:w-[400px] shadow-xl"
             >
               <h3 className="text-lg font-semibold mb-3">Logout User?</h3>
               <p className="text-sm mb-6 opacity-80">
@@ -169,26 +185,31 @@ const Menu = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="font-[jost] select-none z-[99999]" ref={menuRef}>
+      <div
+        className="menu-container font-[crushed] select z-[99999]"
+        ref={menuRef}
+      >
         <div
-          className={`fixed top-0 right-0 ${
+          className={`menu-bar fixed top-[0] right-[0] ${
             shouldShowLogo ? "w-screen" : "w-fit"
-          } z-[1] flex items-center justify-between font-light`}
+          } z-[1] flex items-center justify-between font-[200]`}
         >
-          {shouldShowLogo && (
-            <div className="w-24 md:w-32">
-              <a href="/">
-                <img
-                  className="w-full h-full object-cover"
-                  src="/logo.svg"
-                  alt="logo"
-                />
-              </a>
-            </div>
-          )}
+          <div className="overflow-hidden">
+            {shouldShowLogo && (
+              <div className="image w-[8vw] translate-x-[-100%]">
+                <a href="/">
+                  <img
+                    className="w-full h-full object-cover"
+                    src="/logo.svg"
+                    alt="logo"
+                  />
+                </a>
+              </div>
+            )}
+          </div>
           <div
-            className={`flex items-center gap-4 md:gap-8 ${
-              shouldShowLogo ? "" : "py-4"
+            className={`flex items-center gap-[2vw] ${
+              shouldShowLogo ? "" : "py-[1.2vw]"
             }`}
           >
             {isLoggedIn && (
@@ -198,59 +219,41 @@ const Menu = () => {
                   initial={{ scale: 0.9, opacity: 0.5 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.3 }}
-                  className={`font-semibold px-3 py-1 rounded-full text-sm ${
-                    isMobile ? "text-xs" : "md:text-base"
-                  } ${
+                  className={`font-semibold px-[1vw] py-[0.3vw] rounded-2xl text-[1.2vw] ${
                     credits === 0
-                      ? "bg-red-800 text-[#e2e8f0]"
-                      : "bg-[#ffe655] text-[#00141b]"
+                      ? "bg-[#630202] text-[#F1F5F9]"
+                      : "bg-[#FFE655] text-[#00141B]"
                   }`}
                 >
                   Credits:&nbsp;{credits}
                 </motion.div>
 
-                {!isMobile && (
-                  <button
-                    className="cursor-pointer bg-[#0b1e26] text-gray-200 font-medium hover:bg-red-600 hover:text-white px-3 py-1 rounded-full text-sm md:text-base transition-all duration-200"
-                    onClick={() => setShowLogOutModal(true)}
-                  >
-                    Logout
-                  </button>
-                )}
+                <button
+                  className="cursor-pointer bg-[#0B1E26] text-[#E2E8F0] font-medium hover:bg-[#EF4444] hover:text-[#FFFFFF] px-[1vw] py-[0.3vw] rounded-3xl text-[1.2vw] transition-all duration-200"
+                  onClick={() => setShowLogOutModal(true)}
+                >
+                  Logout
+                </button>
               </>
             )}
 
-            <div className="flex w-full h-fit bg-[#00141b] rounded-l-full p-2 items-center">
+            <div className="flex w-full h-fit bg-[#00141B] rounded-l-full p-2 items-center">
               <div
-                className="w-10 h-10 cursor-pointer flex flex-col justify-center items-center gap-1.5"
+                className="menu-open hover_target w-[40px] cursor-pointer flex flex-col justify-center gap-[0.4vw] p-2"
+                data-cursor-scale="2"
                 onClick={toggleMenu}
               >
-                <div
-                  className={`w-6 h-0.5 bg-gray-200 rounded-full transition-all duration-300 ${
-                    isMenuOpen ? "rotate-45 translate-y-2" : ""
-                  }`}
-                ></div>
-                <div
-                  className={`w-6 h-0.5 bg-yellow-400 rounded-full transition-all duration-300 ${
-                    isMenuOpen ? "opacity-0" : ""
-                  }`}
-                ></div>
-                <div
-                  className={`w-6 h-0.5 bg-gray-200 rounded-full transition-all duration-300 ${
-                    isMenuOpen ? "-rotate-45 -translate-y-2" : ""
-                  }`}
-                ></div>
+                <div className="h-[0.25vw] rounded-full w-full bg-[#E2E8F0] bar"></div>
+                <div className="h-[0.25vw] rounded-full w-full bg-[#FACC15] bar"></div>
+                <div className="h-[0.25vw] rounded-full w-full bg-[#E2E8F0] bar"></div>
               </div>
             </div>
           </div>
         </div>
 
-        <div
-          className="menu-overlay fixed top-0 left-0 w-screen h-screen text-[#00141b] bg-[#00141ba5] backdrop-blur-[20px] z-[2000]"
-          style={{ clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)" }}
-        >
-          <div className="flex justify-between items-center p-4 md:p-8">
-            <div className="w-24 md:w-32">
+        <div className="menu-overlay fixed top-0 left-0 w-[100vw] h-screen text-[#00141b] bg-[#e2e8f061] backdrop-blur-[20px] z-[2]">
+          <div className="menu-overlay-bar text-[3vw] flex justify-between items-center">
+            <div className="w-[8vw]">
               <img
                 className="w-full h-full object-cover"
                 src="/logo.svg"
@@ -258,49 +261,46 @@ const Menu = () => {
               />
             </div>
 
-            <div className="cursor-pointer text-[#ffe655]" onClick={toggleMenu}>
-              <XIcon size={40} />
+            <div
+              className="menu-close hover_target cursor-pointer text-[4vw] text-[#ffe655]"
+              data-cursor-scale="2"
+              onClick={toggleMenu}
+            >
+              <p>
+                <XIcon size={40} />
+              </p>
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center h-[80%]">
-            <div className="flex flex-col items-center gap-8">
+          <div className="menu-copy flex">
+            <div className="menu-links">
               {navLinks.map((link, i) => (
                 <div
-                  className="menu-link-item-holder"
+                  className="menu-link-item-holder w-[100vw] text-[12vw] my-4 leading-[8vw] tracking-widest"
                   key={i}
                   onClick={toggleMenu}
                 >
                   <Link
                     href={link.href}
-                    className={`text-5xl md:text-9xl text-[#e2e8f0] hover:bg-[#f2e6966f] hover:backdrop-blur-[10px] hover:text-[#00141b] transition-colors duration-300 flex items-center gap-4 w-screen justify-center ${
-                      link.label === "PROFF"
-                        ? "font-[mouse] tracking-widest"
-                        : ""
-                    }`}
+                    className="menu-link hover_click hover:bg-[#ffe55569] hover:text-[#E2E8F0] transition-all duration-[0.4s] px-[1vw] py-[0.5vw] rounded-xl flex items-center justify-center gap-[2vw]"
+                    data-cursor-label={link.data}
                   >
-                    {React.cloneElement(link.icon, {
-                      className: "w-16 h-16 md:w-24 md:h-24 text-[#ffe655]",
-                    })}
+                    {link.icon}
                     {link.label}
                   </Link>
                 </div>
               ))}
             </div>
-            {isMobile && isLoggedIn && (
-              <div className="mt-28">
-                <button
-                  className="cursor-pointer bg-[#ff4343] text-[#e2e8f0] font-medium px-6 py-2 rounded-full text-lg transition-all duration-200"
-                  onClick={() => {
-                    toggleMenu();
-                    setShowLogOutModal(true);
-                  }}
-                  b
-                >
-                  Logout
-                </button>
-              </div>
-            )}
+            {/* <div className="menu-info flex flex-col justify-between gap-[2vw] items-end w-full pr-[2vw] py-[2vw]">
+            <div className="menu-info-col text-[4vw] flex flex-col items-end justify-between w-full">
+              <a href="">X &#8599;</a>
+              <a href="">Instagram &#8599;</a>
+              <a href="">LinkedIn &#8599;</a>
+            </div>
+            <div className="menu-info-col text-[3.4vw]">
+              <p>info@examease.com</p>
+            </div>
+          </div> */}
           </div>
         </div>
       </div>
