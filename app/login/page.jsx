@@ -5,7 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 
+import { useAuth } from "../components/AuthContext";
+
 export default function LoginRegisterPage() {
+  const { fetchWithAuth } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
 
@@ -35,9 +38,7 @@ export default function LoginRegisterPage() {
 
     const verifyToken = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/auth/verify`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetchWithAuth(`${BACKEND_URL}/auth/verify`);
         if (res.ok) router.push("/");
         else localStorage.clear();
       } catch {
@@ -55,7 +56,7 @@ export default function LoginRegisterPage() {
     setError("");
     setIsLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/auth/login`, {
+      const res = await fetchWithAuth(`${BACKEND_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginData),
@@ -65,7 +66,7 @@ export default function LoginRegisterPage() {
 
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("refresh_token", data.refresh_token);
-      router.push("/");
+      window.location.href = "/";
     } catch (err) {
       setError(err.message);
     } finally {
@@ -86,7 +87,7 @@ export default function LoginRegisterPage() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/auth/register`, {
+      const res = await fetchWithAuth(`${BACKEND_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -100,7 +101,7 @@ export default function LoginRegisterPage() {
       if (!res.ok) throw new Error(data.detail || "Registration failed");
 
       // Auto-login after register
-      const loginRes = await fetch(`${BACKEND_URL}/auth/login`, {
+      const loginRes = await fetchWithAuth(`${BACKEND_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -115,7 +116,7 @@ export default function LoginRegisterPage() {
 
       localStorage.setItem("access_token", loginData.access_token);
       localStorage.setItem("refresh_token", loginData.refresh_token);
-      router.push("/");
+      window.location.href = "/";
     } catch (err) {
       setError(err.message);
     } finally {
@@ -129,7 +130,7 @@ export default function LoginRegisterPage() {
     setError("");
     setIsLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/auth/forgot-password`, {
+      const res = await fetchWithAuth(`${BACKEND_URL}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),

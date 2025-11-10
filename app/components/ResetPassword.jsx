@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 
+import { useAuth } from "./AuthContext";
+
 export default function ResetPassword() {
+  const { fetchWithAuth } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -39,7 +42,7 @@ export default function ResetPassword() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/auth/reset-password`, {
+      const res = await fetchWithAuth(`${BACKEND_URL}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, new_password: newPassword }),

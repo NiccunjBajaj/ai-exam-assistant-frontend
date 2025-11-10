@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 
+import { useAuth } from "../components/AuthContext";
+
 export default function RegisterPage() {
+  const { fetchWithAuth } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const [formData, setFormData] = useState({
     username: "",
@@ -50,7 +53,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/auth/register`, {
+      const res = await fetchWithAuth(`${BACKEND_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -65,7 +68,7 @@ export default function RegisterPage() {
       if (!res.ok) throw new Error(data.detail || "Registration failed");
 
       // Auto-login after registration
-      const loginRes = await fetch(`${BACKEND_URL}/auth/login`, {
+      const loginRes = await fetchWithAuth(`${BACKEND_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

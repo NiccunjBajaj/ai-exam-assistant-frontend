@@ -568,7 +568,7 @@ function ChatContent() {
 
       {/* Side Pannel */}
       <main
-        className="min-h-screen flex bg-[#00141b] select noto"
+        className={`min-h-screen flex bg-[#00141b] select noto ${isMobile && showSidebar ? "overflow-hidden" : ""}`}
         onDragOver={(e) => {
           e.preventDefault();
           setIsDragging(true);
@@ -609,70 +609,72 @@ function ChatContent() {
               <h2 className="text-[1.2rem] text-white font-semibold mb-2">
                 Past Chats
               </h2>
-              {pastSessions.map((s) => (
-                <div
-                  key={s.id}
-                  className={`flex justify-between items-center rounded-lg mb-2 hover:bg-[#F1E596] hover:text-[#000] transition-all duration-[0.3s] ${
-                    s.id === sessionId
-                      ? "bg-[#F1E596] text-[#000]"
-                      : "text-[#e2e8f0]"
-                  }`}
-                >
-                  <button
-                    onClick={() => handlePastChatClick(s.id)}
-                    className="block w-full text-left px-3 py-2 text-[1.02rem]"
+              <div className="max-h-[60vh] overflow-y-auto">
+                {pastSessions.map((s) => (
+                  <div
+                    key={s.id}
+                    className={`flex justify-between items-center rounded-lg mb-2 hover:bg-[#F1E596] hover:text-[#000] transition-all duration-[0.3s] ${
+                      s.id === sessionId
+                        ? "bg-[#F1E596] text-[#000]"
+                        : "text-[#e2e8f0]"
+                    }`}
                   >
-                    {s.title}
-                  </button>
-                  <div className="relative menu-container">
                     <button
-                      onClick={() =>
-                        setOpenMenuId(openMenuId === s.id ? null : s.id)
-                      }
-                      className="p-2 rounded-md hover:bg-black/10"
+                      onClick={() => handlePastChatClick(s.id)}
+                      className="block w-full text-left px-3 py-2 text-[1.02rem]"
                     >
-                      <MoreHorizontal size={20} className="cursor-pointer" />
+                      {s.title}
                     </button>
-                    {openMenuId === s.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-[#00141b] rounded-md shadow-lg z-10">
-                        <button
-                          onClick={() => {
-                            handleShare(s.id);
-                            setOpenMenuId(null);
-                          }}
-                          className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
-                        >
-                          <Share2 size={16} />
-                          Share
-                        </button>
-                        <button
-                          onClick={() => {
-                            setTargetSessionId(s.id);
-                            setNewTitle(s.title);
-                            setShowRenameModal(true);
-                            setOpenMenuId(null);
-                          }}
-                          className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
-                        >
-                          <PencilLine size={16} />
-                          Rename
-                        </button>
-                        <button
-                          onClick={() => {
-                            setTargetSessionId(s.id);
-                            setShowDeleteModal(true);
-                            setOpenMenuId(null);
-                          }}
-                          className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500 hover:text-white"
-                        >
-                          <Trash2Icon size={16} />
-                          Delete
-                        </button>
-                      </div>
-                    )}
+                    <div className="relative menu-container">
+                      <button
+                        onClick={() =>
+                          setOpenMenuId(openMenuId === s.id ? null : s.id)
+                        }
+                        className="p-2 rounded-md hover:bg-black/10"
+                      >
+                        <MoreHorizontal size={20} className="cursor-pointer" />
+                      </button>
+                      {openMenuId === s.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-[#00141b] rounded-md shadow-lg z-10">
+                          <button
+                            onClick={() => {
+                              handleShare(s.id);
+                              setOpenMenuId(null);
+                            }}
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
+                          >
+                            <Share2 size={16} />
+                            Share
+                          </button>
+                          <button
+                            onClick={() => {
+                              setTargetSessionId(s.id);
+                              setNewTitle(s.title);
+                              setShowRenameModal(true);
+                              setOpenMenuId(null);
+                            }}
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
+                          >
+                            <PencilLine size={16} />
+                            Rename
+                          </button>
+                          <button
+                            onClick={() => {
+                              setTargetSessionId(s.id);
+                              setShowDeleteModal(true);
+                              setOpenMenuId(null);
+                            }}
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500 hover:text-white"
+                          >
+                            <Trash2Icon size={16} />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </motion.aside>
           )}
         </AnimatePresence>
