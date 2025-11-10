@@ -34,16 +34,22 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
+    if (!isLoggedIn) return;
 
-    fetch(`${BACKEND_URL}/user/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setCredits(data.credits))
-      .catch(console.error);
-  }, []);
+    const fetchCredits = async () => {
+      try {
+        const res = await fetchWithAuth(`${BACKEND_URL}/user/me`);
+        const data = await res.json();
+        if (res.ok) {
+          setCredits(data.credits);
+        }
+      } catch (error) {
+        console.error("Failed to fetch credits", error);
+      }
+    };
+
+    fetchCredits();
+  }, [isLoggedIn]);
 
   // Refresh token function
   const refreshAccessToken = async () => {
@@ -95,27 +101,35 @@ export function AuthProvider({ children }) {
   const fetchWithAuth = async (url, options = {}) => {
     const token = localStorage.getItem("access_token");
 
+    const headers = {
+      ...options.headers,
+      Authorization: `Bearer ${token || ""}`,
+    };
+
+    if (!(options.body instanceof FormData)) {
+      headers["Content-Type"] = "application/json";
+    }
+
     const response = await fetch(url, {
       ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token || ""}`,
-        "Content-Type": "application/json",
-      },
+      headers,
     });
 
     // If token expired, try to refresh and retry
     if (response.status === 401) {
       try {
         const newToken = await refreshAccessToken();
+        const retryHeaders = {
+          ...options.headers,
+          Authorization: `Bearer ${newToken}`,
+        };
+        if (!(options.body instanceof FormData)) {
+          retryHeaders["Content-Type"] = "application/json";
+        }
         // Retry the request with new token
         return fetch(url, {
           ...options,
-          headers: {
-            ...options.headers,
-            Authorization: `Bearer ${newToken}`,
-            "Content-Type": "application/json",
-          },
+          headers: retryHeaders,
         });
       } catch (error) {
         return response; // Return original error response

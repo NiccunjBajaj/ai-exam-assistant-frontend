@@ -27,6 +27,7 @@ export default function RootLayout({ children }) {
             <Menu />
           </div>
           {children}
+          <div id="portal-root"></div>
         </AuthProvider>
       </body>
     </html>

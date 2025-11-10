@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useAuth } from "@/app/components/AuthContext";
 
 export default function QuizFromFilePage() {
-  const { fetchWithAuth } = useAuth();
+  const { fetchWithAuth, setCredits } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
   const inputRef = useRef(null);
@@ -74,6 +74,9 @@ export default function QuizFromFilePage() {
     });
 
     const data = await res.json();
+    if (data.credits !== undefined) {
+      setCredits(data.credits);
+    }
     router.push(`/study/quiz/${data.session_id}`);
   };
 

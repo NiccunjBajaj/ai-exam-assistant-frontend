@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/app/components/AuthContext";
 
 export default function FlashcardsPage() {
-  const { fetchWithAuth } = useAuth();
+  const { fetchWithAuth, setCredits } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
 
@@ -111,6 +111,9 @@ export default function FlashcardsPage() {
     });
 
     const data = await res.json();
+    if (data.credits !== undefined) {
+      setCredits(data.credits);
+    }
     const newCards = data.flashcards.map((c, i) => ({
       id: `new-${i}`,
       question: c.question,

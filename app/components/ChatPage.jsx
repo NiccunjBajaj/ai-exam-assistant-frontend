@@ -21,6 +21,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useAuth } from "./AuthContext";
+import FloatingMenu from "./FloatingMenu";
 
 function StreamingMessage({ text, onDone }) {
   const [displayed, setDisplayed] = useState("");
@@ -87,12 +88,14 @@ function ChatContent() {
   const [newTitle, setNewTitle] = useState("");
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLink, setShareLink] = useState("");
+  const [dropdownPos, setDropdownPos] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const fileUploaderRef = useRef(null);
+  const menuRef = useRef(null);
   const isNewSession = useRef(false);
   const isSubmitting = useRef(false);
   const isFetchingMessages = useRef(false);
@@ -377,6 +380,9 @@ function ChatContent() {
         if (showShareModal) {
           setShowShareModal(false);
         }
+        if (openMenuId) {
+          setOpenMenuId(null);
+        }
         if (isMobile) {
           if (showSidebar) {
             setShowSidebar(false);
@@ -387,11 +393,22 @@ function ChatContent() {
 
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [showDeleteModal, showRenameModal, showShareModal, showSidebar]);
+  }, [
+    showDeleteModal,
+    showRenameModal,
+    showShareModal,
+    showSidebar,
+    openMenuId,
+  ]);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      if (openMenuId && !event.target.closest(".menu-container")) {
+      if (
+        openMenuId &&
+        !event.target.closest(".menu-container") &&
+        menuRef.current &&
+        !menuRef.current.contains(event.target)
+      ) {
         setOpenMenuId(null);
       }
     };
@@ -568,7 +585,9 @@ function ChatContent() {
 
       {/* Side Pannel */}
       <main
-        className={`min-h-screen flex bg-[#00141b] select noto ${isMobile && showSidebar ? "overflow-hidden" : ""}`}
+        className={`min-h-screen flex bg-[#00141b] select noto ${
+          isMobile && showSidebar ? "overflow-hidden" : ""
+        }`}
         onDragOver={(e) => {
           e.preventDefault();
           setIsDragging(true);
@@ -609,7 +628,7 @@ function ChatContent() {
               <h2 className="text-[1.2rem] text-white font-semibold mb-2">
                 Past Chats
               </h2>
-              <div className="max-h-[60vh] overflow-y-auto">
+              <div className="min-h-[60vh] overflow-y-auto">
                 {pastSessions.map((s) => (
                   <div
                     key={s.id}
@@ -627,25 +646,31 @@ function ChatContent() {
                     </button>
                     <div className="relative menu-container">
                       <button
-                        onClick={() =>
-                          setOpenMenuId(openMenuId === s.id ? null : s.id)
-                        }
+                        onClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setDropdownPos({
+                            top: rect.top,
+                            left: rect.right + 10,
+                          });
+                          setOpenMenuId(openMenuId === s.id ? null : s.id);
+                        }}
                         className="p-2 rounded-md hover:bg-black/10"
                       >
                         <MoreHorizontal size={20} className="cursor-pointer" />
                       </button>
-                      {openMenuId === s.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-[#00141b] rounded-md shadow-lg z-10">
+                      {openMenuId === s.id && dropdownPos && (
+                        <FloatingMenu position={dropdownPos} menuRef={menuRef}>
                           <button
                             onClick={() => {
                               handleShare(s.id);
                               setOpenMenuId(null);
                             }}
-                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
+                            className="flex items-center gap-2 w-full rounded-2xl text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
                           >
                             <Share2 size={16} />
                             Share
                           </button>
+
                           <button
                             onClick={() => {
                               setTargetSessionId(s.id);
@@ -653,23 +678,24 @@ function ChatContent() {
                               setShowRenameModal(true);
                               setOpenMenuId(null);
                             }}
-                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
+                            className="flex items-center gap-2 w-full rounded-2xl text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
                           >
                             <PencilLine size={16} />
                             Rename
                           </button>
+
                           <button
                             onClick={() => {
                               setTargetSessionId(s.id);
                               setShowDeleteModal(true);
                               setOpenMenuId(null);
                             }}
-                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500 hover:text-white"
+                            className="flex items-center gap-2 w-full rounded-2xl text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500 hover:text-white"
                           >
                             <Trash2Icon size={16} />
                             Delete
                           </button>
-                        </div>
+                        </FloatingMenu>
                       )}
                     </div>
                   </div>

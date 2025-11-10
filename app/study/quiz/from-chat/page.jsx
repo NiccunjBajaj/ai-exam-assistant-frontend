@@ -9,7 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/app/components/AuthContext";
 
 export default function QuizFromChatPage() {
-  const { fetchWithAuth } = useAuth();
+  const { fetchWithAuth, setCredits } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
   const [sessions, setSessions] = useState([]);
@@ -55,6 +55,9 @@ export default function QuizFromChatPage() {
     });
 
     const data = await res.json();
+    if (data.credits !== undefined) {
+      setCredits(data.credits);
+    }
     router.push(`/study/quiz/${data.session_id}`);
   };
 

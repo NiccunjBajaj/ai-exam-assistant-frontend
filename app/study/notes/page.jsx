@@ -12,7 +12,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 export default function NotesPage() {
-  const { fetchWithAuth } = useAuth();
+  const { fetchWithAuth, setCredits } = useAuth();
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
 
@@ -31,6 +31,11 @@ export default function NotesPage() {
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+
+  useEffect(() => {
+    setSessionId(uuidv4());
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -68,7 +73,7 @@ export default function NotesPage() {
   const handleUploadClick = () => inputRef.current?.click();
 
   const handleFileChange = async (e) => {
-    const newId = uuidv4();
+    // newId = uuidv4()
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -76,7 +81,8 @@ export default function NotesPage() {
     setFile(file);
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("session_id", newId);
+    // formData.append("session_id", newId);
+    formData.append("session_id", sessionId);
 
     const res = await fetchWithAuth(`${BACKEND_URL}/upload-file`, {
       method: "POST",
@@ -117,6 +123,9 @@ export default function NotesPage() {
       }),
     });
     const data = await res.json();
+    if (data.credits !== undefined) {
+      setCredits(data.credits);
+    }
     setNotes((prev) => [{ id: "new", content: data.notes }, ...prev]);
     await fetchNotes();
     await fetchSessions();
