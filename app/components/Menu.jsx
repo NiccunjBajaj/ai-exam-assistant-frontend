@@ -38,8 +38,11 @@ const navLinks = [
 ];
 
 const Menu = () => {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const pathname = usePathname();
+
+  if (pathname === "/login" || pathname === "/register") return null;
+
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
   const [plan, setPlan] = useState(null);
   const { isLoggedIn, logout, credits } = useAuth();
