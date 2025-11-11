@@ -19,6 +19,8 @@ import {
   Share2,
   MoreHorizontal,
   Upload,
+  Search,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "./AuthContext";
 import FloatingMenu from "./FloatingMenu";
@@ -80,16 +82,17 @@ function ChatContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [sessionId, setSessionId] = useState(null);
-  const [marks, setMarks] = useState(2);
   const [pastSessions, setPastSessions] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const [targetSessionId, setTargetSessionId] = useState(null);
   const [newTitle, setNewTitle] = useState("");
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [dropdownPos, setDropdownPos] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [showMainMenu, setShowMainMenu] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef(null);
@@ -254,7 +257,8 @@ function ChatContent() {
     setSessionId(null);
     setMessages([]);
     fileUploaderRef.current?.clearFile();
-    setShowSidebar(true);
+    if (!isMobile) setShowSidebar(true);
+    else setShowSidebar(false);
   };
 
   const handleSubmit = async (e) => {
@@ -294,7 +298,6 @@ function ChatContent() {
         body: JSON.stringify({
           session_id: sessionId,
           user_input: userMessage.content,
-          marks,
         }),
       });
 
@@ -380,6 +383,12 @@ function ChatContent() {
         if (showShareModal) {
           setShowShareModal(false);
         }
+        if (showSearchModal) {
+          setShowSearchModal(false);
+        }
+        if (showMainMenu) {
+          setShowMainMenu(false);
+        }
         if (openMenuId) {
           setOpenMenuId(null);
         }
@@ -397,6 +406,8 @@ function ChatContent() {
     showDeleteModal,
     showRenameModal,
     showShareModal,
+    showSearchModal,
+    showMainMenu,
     showSidebar,
     openMenuId,
   ]);
@@ -404,12 +415,13 @@ function ChatContent() {
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (
-        openMenuId &&
+        (openMenuId || showMainMenu) &&
         !event.target.closest(".menu-container") &&
         menuRef.current &&
         !menuRef.current.contains(event.target)
       ) {
         setOpenMenuId(null);
+        setShowMainMenu(false);
       }
     };
 
@@ -417,7 +429,7 @@ function ChatContent() {
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
-  }, [openMenuId]);
+  }, [openMenuId, showMainMenu]);
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -583,9 +595,66 @@ function ChatContent() {
         )}
       </AnimatePresence>
 
+      {/* Search Modal */}
+      <AnimatePresence>
+        {showSearchModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[#0000005b] backdrop-blur-[4px] flex items-center justify-center z-[1000]"
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="bg-[#00141b] text-[#e2e8f0] p-6 rounded-2xl w-[90%] sm:w-[500px] shadow-xl"
+            >
+              <h3 className="text-lg font-semibold mb-3">Search Chats</h3>
+              <input
+                type="text"
+                placeholder="Search sessions..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full p-3 rounded-lg bg-[#0b1e26] border border-[#e2e8f0] text-[#ffe655] outline-none mb-5"
+              />
+              <div className="mt-1 flex-col flex max-h-60 overflow-y-auto rounded-lg">
+                {searchResults.length > 0
+                  ? searchResults.map((session) => (
+                      <button
+                        key={session.id}
+                        onClick={() => {
+                          handlePastChatClick(session.id);
+                          setShowSearchModal(false);
+                          setShowSidebar(false);
+                          setQuery("");
+                        }}
+                        className="p-3 text-left hover:bg-[#f1e596] hover:text-[#00141b] rounded-md"
+                      >
+                        {session.title}
+                      </button>
+                    ))
+                  : query && <p className="p-3">No sessions found.</p>}
+              </div>
+              <div className="flex justify-end gap-3 mt-5">
+                <button
+                  onClick={() => {
+                    setShowSearchModal(false);
+                    setQuery("");
+                  }}
+                  className="px-4 py-2 rounded-lg bg-[#f1e596] hover:bg-[#ffe655] text-[#00141b]"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Side Pannel */}
       <main
-        className={`min-h-screen flex bg-[#00141b] select noto ${
+        className={`min-h-[100svh] flex bg-[#00141b] select noto ${
           isMobile && showSidebar ? "overflow-hidden" : ""
         }`}
         onDragOver={(e) => {
@@ -602,7 +671,7 @@ function ChatContent() {
               transition={{ type: "spring", stiffness: 200, damping: 30 }}
               className={`h-[100vh] ${
                 isMobile ? "w-full fixed top-0 left-0 z-50" : "w-[15%]"
-              } bg-[#0B1E26] p-4`}
+              } bg-[#0B1E26] p-2`}
             >
               <div className="flex items-center w-full justify-between mb-2 z-[999] no_scrollbar">
                 <a
@@ -612,7 +681,7 @@ function ChatContent() {
                   Proff
                 </a>
                 {isMobile && (
-                  <button onClick={toggleSidebar} className="text-white">
+                  <button onClick={toggleSidebar} className="text-[#e2e8f0]">
                     <X size={24} />
                   </button>
                 )}
@@ -620,27 +689,38 @@ function ChatContent() {
               <hr className="my-3 text-[#00141b]" />
               <button
                 onClick={startNewChat}
-                className="w-full mb-3 py-2 text-[1.2rem] text-left rounded-lg flex gap-2 hover:bg-[#f1e596] hover:text-[#000] transition-all duration-[0.3s] items-center"
+                className="w-full mb-1 py-2 px-2 text-[1rem] text-left rounded-lg flex gap-2 hover:bg-[#f1e596] hover:text-[#000] transition-all duration-[0.3s] items-center"
               >
-                <SquarePen size={20} /> New Chat
+                <SquarePen size={15} /> New Chat
+              </button>
+              <button
+                onClick={() => setShowSearchModal(true)}
+                className="w-full mb-3 py-2 px-2 text-[1rem] text-left rounded-lg flex gap-2 hover:bg-[#f1e596] hover:text-[#000] transition-all duration-[0.3s] items-center"
+              >
+                <Search size={15} /> Search
               </button>
               <hr className="mb-3 text-[#00141b]" />
-              <h2 className="text-[1.2rem] text-white font-semibold mb-2">
-                Past Chats
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-[1.2rem] text-[#e2e8f0] font-semibold mb-2 px-2">
+                  Past Chats
+                </h2>
+              </div>
               <div className="min-h-[60vh] overflow-y-auto">
                 {pastSessions.map((s) => (
                   <div
                     key={s.id}
-                    className={`flex justify-between items-center rounded-lg mb-2 hover:bg-[#F1E596] hover:text-[#000] transition-all duration-[0.3s] ${
+                    className={`flex justify-between items-center rounded-xl mb-2 hover:bg-[#F1E596] hover:text-[#000] transition-all duration-[0.3s] ${
                       s.id === sessionId
-                        ? "bg-[#F1E596] text-[#000]"
+                        ? "bg-[#F1E596] text-[#00141b]"
                         : "text-[#e2e8f0]"
                     }`}
                   >
                     <button
-                      onClick={() => handlePastChatClick(s.id)}
-                      className="block w-full text-left px-3 py-2 text-[1.02rem]"
+                      onClick={() => {
+                        handlePastChatClick(s.id);
+                        setShowSidebar(false);
+                      }}
+                      className="block w-full text-left px-2 text-[0.9rem]"
                     >
                       {s.title}
                     </button>
@@ -713,61 +793,82 @@ function ChatContent() {
               width: showSidebar ? (isMobile ? "100%" : "85%") : "100%",
             }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
-            className="h-screen"
+            className="h-[100svh]"
           >
-            <div className="h-screen select1 relative">
+            <div className="h-[100svh] select1 relative">
               {sessionId && (
-                <button
-                  onClick={() => handleShare(sessionId)}
-                  className={`p-2 flex items-center gap-1 absolute ${
-                    isMobile ? "top-18.5 left-3" : "top-[1.3vw] left-[1vw]"
-                  } rounded-md bg-[#ffe655] hover:bg-[#f1e596] text-[#00141b] cursor-pointer`}
+                <div
+                  className={`absolute menu-container ${
+                    isMobile ? "top-19.5 left-3" : "top-[1.3vw] left-[1vw]"
+                  }`}
                 >
-                  <Share2 size={15} /> {isMobile ? "" : "Share"}
-                </button>
+                  <button
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setDropdownPos({ top: rect.bottom + 5, left: rect.left });
+                      setShowMainMenu(!showMainMenu);
+                    }}
+                    className="p-2 rounded-full bg-[#f1e596] hover:bg-[#ffe655] text-[#00141b] cursor-pointer"
+                  >
+                    <MoreHorizontal size={isMobile ? 10 : 15} />
+                  </button>
+                  {showMainMenu && dropdownPos && (
+                    <FloatingMenu position={dropdownPos} menuRef={menuRef}>
+                      <button
+                        onClick={() => {
+                          handleShare(sessionId);
+                          setShowMainMenu(false);
+                        }}
+                        className="flex items-center gap-2 w-full rounded-2xl text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
+                      >
+                        <Share2 size={16} />
+                        Share
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTargetSessionId(sessionId);
+                          setNewTitle(
+                            pastSessions.find((s) => s.id === sessionId)
+                              ?.title || ""
+                          );
+                          setShowRenameModal(true);
+                          setShowMainMenu(false);
+                        }}
+                        className="flex items-center gap-2 w-full rounded-2xl text-left px-4 py-2 text-sm text-[#e2e8f0] hover:bg-[#F1E596] hover:text-[#000]"
+                      >
+                        <PencilLine size={16} />
+                        Rename
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTargetSessionId(sessionId);
+                          setShowDeleteModal(true);
+                          setShowMainMenu(false);
+                        }}
+                        className="flex items-center gap-2 w-full rounded-2xl text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500 hover:text-[#e2e8f0]"
+                      >
+                        <Trash2Icon size={16} />
+                        Delete
+                      </button>
+                    </FloatingMenu>
+                  )}
+                </div>
               )}
               <div className="bg-[#00141b] flex flex-col h-[inherit] w-[inherit] text-[#e2e8f0]">
                 <header className="select flex items-center justify-between w-fit">
                   {isMobile && (
-                    <button onClick={toggleSidebar} className="p-3 w-15">
-                      <img
-                        src="/smalllogo.svg"
-                        alt="Beee"
-                        className="w-full h-full object-cover"
-                      />
+                    <button
+                      onClick={toggleSidebar}
+                      className="p-1 my-6 mx-2 flex items-center rounded-full bg-[#0b1e26]"
+                    >
+                      <ChevronRight />
                     </button>
                   )}
                 </header>
-                <div className="flex flex-col w-3/4 sm:w-1/2 md:w-1/3 mx-auto my-4">
-                  <input
-                    type="text"
-                    placeholder="Search sessions..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="p-4 w-full rounded-2xl text-[#ffe655] bg-[#0b1e26] border-none outline-none"
-                  />
-                  {query && (
-                    <div className="mt-1 flex-col flex max-h-96 overflow-y-auto bg-[#0b1e26] rounded-2xl">
-                      {searchResults.length > 0 ? (
-                        searchResults.map((session) => (
-                          <button
-                            key={session.id}
-                            onClick={() => handlePastChatClick(session.id)}
-                            className="p-3 text-left hover:bg-[#f1e596] hover:text-[#000] rounded-md"
-                          >
-                            {session.title}
-                          </button>
-                        ))
-                      ) : (
-                        <p className="p-3">No sessions found.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
                 <section
-                  className={`flex-1 overflow-y-auto ${
+                  className={`flex-1 overflow-y-auto mb-30 ${
                     isMobile ? "p-4" : "p-6"
-                  } space-y-6 no-scrollbar`}
+                  } space-y-4 mod-scrollbar`}
                 >
                   {messages.length === 0 || query ? (
                     <div
@@ -802,10 +903,12 @@ function ChatContent() {
                           key={m.id}
                           className={`flex ${
                             m.role === "user" ? "justify-end" : "justify-start"
-                          } ${isMobile ? "px-4" : "w-[55%]"} mb-30 mx-auto`}
+                          } ${isMobile ? "px-4" : "w-[55%]"} mb-4 mx-auto ${
+                            index === 0 ? "mt-[7vw]" : ""
+                          }`}
                         >
                           <div
-                            className={`rounded-lg px-4 py-3 ${
+                            className={`rounded-3xl px-4 py-3 ${
                               m.role === "user"
                                 ? `bg-[#0B1E26] ${
                                     isMobile ? "max-w-[90%]" : "max-w-[100%]"
@@ -975,7 +1078,6 @@ function ChatContent() {
                           setIsDragging={setIsDragging}
                         />
                         <div>
-                          <CustomDropdown marks={marks} setMarks={setMarks} />
                           <button
                             type="submit"
                             disabled={isLoading || !input.trim()}

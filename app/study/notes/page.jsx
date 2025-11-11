@@ -23,7 +23,6 @@ export default function NotesPage() {
   const [uploadedText, setUploadedText] = useState("");
   const [file, setFile] = useState(null);
   const [notes, setNotes] = useState([]);
-  const [marks, setMarks] = useState(5);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [targetSessionId, setTargetSessionId] = useState(null);
@@ -105,7 +104,6 @@ export default function NotesPage() {
     setUploadedText("");
     setFile(null);
     setTitle("");
-    setMarks(2);
   };
 
   const generateNotes = async () => {
@@ -119,7 +117,6 @@ export default function NotesPage() {
         source: "file",
         file_name: file?.name || "Untitled",
         title: title.trim(),
-        marks,
       }),
     });
     const data = await res.json();
@@ -133,7 +130,6 @@ export default function NotesPage() {
     setFile(null);
     setUploadedText("");
     setTitle("");
-    setMarks(5);
   };
 
   const deleteSession = async (sessionId) => {
@@ -272,17 +268,6 @@ export default function NotesPage() {
                 />
               </div>
               <div className="mb-2">
-                <select
-                  value={marks}
-                  onChange={(e) => setMarks(parseInt(e.target.value))}
-                  className={`p-[0.5vw] outline-none rounded cursor-pointer bg-[#0B1E26] ${
-                    isMobile ? "text-base" : "text-[0.9vw]"
-                  }`}
-                >
-                  <option value={2}>2-marks</option>
-                  <option value={5}>5-marks</option>
-                  <option value={10}>10-marks</option>
-                </select>
                 <button
                   onClick={generateNotes}
                   disabled={loading}

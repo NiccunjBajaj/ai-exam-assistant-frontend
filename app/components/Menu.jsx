@@ -176,7 +176,7 @@ const Menu = () => {
         <div
           className={`fixed top-0 right-0 ${
             shouldShowLogo ? "w-screen" : "w-fit"
-          } z-[1] flex items-center justify-between font-light`}
+          } z-[1] flex items-center justify-between font-light px-4`}
         >
           {shouldShowLogo && (
             <div className="w-24 md:w-32">
@@ -206,7 +206,7 @@ const Menu = () => {
                   } ${
                     credits === 0
                       ? "bg-red-800 text-[#e2e8f0]"
-                      : "bg-[#ffe655] text-[#00141b]"
+                      : "bg-[#f1e596] text-[#00141b]"
                   }`}
                 >
                   Credits:&nbsp;{credits}
@@ -223,23 +223,23 @@ const Menu = () => {
               </>
             )}
 
-            <div className="flex w-full h-fit bg-[#00141b] rounded-l-full p-2 items-center">
+            <div className="flex w-full h-fit bg-[#f1e596] rounded-full p-1 items-center">
               <div
                 className="w-10 h-10 cursor-pointer flex flex-col justify-center items-center gap-1.5"
                 onClick={toggleMenu}
               >
                 <div
-                  className={`w-6 h-0.5 bg-gray-200 rounded-full transition-all duration-300 ${
+                  className={`w-6 h-0.5 bg-[#00141b] rounded-full transition-all duration-300 ${
                     isMenuOpen ? "rotate-45 translate-y-2" : ""
                   }`}
                 ></div>
                 <div
-                  className={`w-6 h-0.5 bg-yellow-400 rounded-full transition-all duration-300 ${
+                  className={`w-6 h-0.5 bg-[#00141b] rounded-full transition-all duration-300 ${
                     isMenuOpen ? "opacity-0" : ""
                   }`}
                 ></div>
                 <div
-                  className={`w-6 h-0.5 bg-gray-200 rounded-full transition-all duration-300 ${
+                  className={`w-6 h-0.5 bg-[#00141b] rounded-full transition-all duration-300 ${
                     isMenuOpen ? "-rotate-45 -translate-y-2" : ""
                   }`}
                 ></div>
