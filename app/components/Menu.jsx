@@ -124,13 +124,15 @@ const Menu = () => {
         if (showLogOutModal) {
           setShowLogOutModal(false);
         }
+        if (isMenuOpen) {
+          setIsMenuOpen(false);
+        }
       }
     };
 
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [showLogOutModal]);
-
+  }, [showLogOutModal, isMenuOpen]);
   return (
     <>
       <AnimatePresence>

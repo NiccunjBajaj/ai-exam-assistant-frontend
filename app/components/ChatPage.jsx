@@ -718,7 +718,7 @@ function ChatContent() {
                     <button
                       onClick={() => {
                         handlePastChatClick(s.id);
-                        setShowSidebar(false);
+                        if (isMobile) setShowSidebar(false);
                       }}
                       className="block w-full text-left px-2 text-[0.9rem]"
                     >
@@ -1064,7 +1064,7 @@ function ChatContent() {
                           placeholder="Ask anything"
                           disabled={isLoading}
                           rows={1}
-                          className={`text-[#e2e8f0] ${
+                          className={`text-[#e2e8f0] mod-scrollbar ${
                             isMobile ? "text-base" : "text-xl"
                           } flex-1 rounded-lg outline-none w-full resize-none overflow-y-auto max-h-[20vh]`}
                         />
