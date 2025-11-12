@@ -31,8 +31,8 @@ export default function AuthSuccessClient() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900">
-        <div className="bg-white p-8 rounded-lg shadow-lg">
+      <div className="min-h-screen flex items-center justify-center bg-[#00141b]">
+        <div className="bg-[#e2e8f0] p-8 rounded-lg shadow-lg">
           <p className="text-red-500">{error}</p>
           <p className="text-gray-600 mt-2">Redirecting to login...</p>
         </div>
@@ -41,8 +41,8 @@ export default function AuthSuccessClient() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900">
-      <div className="bg-white p-8 rounded-lg shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-[#00141b]">
+      <div className="bg-[#e2e8f0] p-8 rounded-lg shadow-lg">
         <div className="flex items-center space-x-2">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           <p className="text-gray-600">Authenticating...</p>

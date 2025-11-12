@@ -161,9 +161,9 @@ export default function LoginRegisterPage() {
               transition={{ duration: 0.6, ease: "easeInOut" }}
               className="bg-[#0B1E26] text-white rounded-r-3xl p-[3vw] flex flex-col justify-center"
             >
-              <h1 className="text-[3vw] text-[#ffe655] mb-[2vw] font-[federo]">
+              <h2 className="text-[3vw] text-[#ffe655] mb-[2vw] font-[federo]">
                 Learnee
-              </h1>
+              </h2>
               {error && (
                 <div className="bg-red-600/30 text-[#ffe655] px-4 py-2 rounded mb-3 text-sm">
                   {error}
@@ -268,9 +268,9 @@ export default function LoginRegisterPage() {
               transition={{ duration: 0.6, ease: "easeInOut" }}
               className="bg-[#e2e8f0] text-[#00141b] rounded-r-3xl p-[3vw] flex flex-col justify-center"
             >
-              <h1 className="text-[2.5vw] font-semibold mb-[1vw]">
+              <h2 className="text-[2.5vw] font-semibold mb-[1vw]">
                 Create Account
-              </h1>
+              </h2>
               {error && (
                 <div className="bg-red-600/30 text-[#00141b] px-4 py-2 rounded mb-3 text-sm">
                   {error}

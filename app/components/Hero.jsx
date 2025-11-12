@@ -16,10 +16,10 @@ const Card = ({ title, span, copy, index }) => {
     <div className="card relative text-[#00141b]" id={`card-${index + 1}`}>
       <div className="card-inner rounded-t-4xl relative will-change-transform w-full h-full p-[3vw] flex gap-[5vw]">
         <div className="card-content flex-3">
-          <h1 className="text-[5vw] font-[600] leading-[1] mb-[4vw]">
+          <h2 className="text-[5vw] font-[600] leading-[1] mb-[4vw]">
             {title}
             <span>{span}</span>
-          </h1>
+          </h2>
           <p className="text-[1.5vw] font-[500] mt-[1vw]">{copy}</p>
         </div>
         <div className="card-img flex-1 aspect-[16/9] rounded-[1.2vw] overflow-hidden">
@@ -386,16 +386,16 @@ const Hero = () => {
                   <div className="text-[#ffe655] word scale-0">e</div>
                   <div className="text-[#ffe655] word scale-0">e</div>
                 </div>
-                <div className="overflow-hidden leading-[11vw] flex flex-col items-center justify-center w-full">
-                  <div className="text-[7.5vw] tracking-[-0.5vw] font-[jost] font-[200] uppercase translate-y-[100vh] text">
+                <h2 className="overflow-hidden leading-[11vw] flex flex-col items-center justify-center w-full">
+                  <span className="text-[7.5vw] tracking-[-0.5vw] font-[jost] font-[200] uppercase translate-y-[100vh] text">
                     a t<span className="text-[#ffe655]">oo</span>l b
                     <span className="text-[#ffe655]">o</span>x
-                  </div>
-                  <div className="text-[2.5vw] leading-0 font-[jost] tracking-wide uppercase translate-y-[100vh] text pb-[1vw]">
+                  </span>
+                  <span className="text-[2.5vw] leading-0 font-[jost] tracking-wide uppercase translate-y-[100vh] text pb-[1vw]">
                     for <span className="text-[#ffe655]">st</span>uden
                     <span className="text-[#ffe655]">ts</span>
-                  </div>
-                </div>
+                  </span>
+                </h2>
               </h1>
               {isLoggedIn ? (
                 ""
@@ -413,11 +413,11 @@ const Hero = () => {
       </div>
 
       <section className="about rounded-t-[4vw] relative bg-[#E2E8F0] flex flex-col gap-[2vw]">
-        <h1 className="animate-text heading font-[jost] font-[100]">
+        <h2 className="animate-text heading font-[jost] font-[100]">
           Your AI-powered exam assistant, designed to help students learn
           smarter and faster. It provides instant answers tailored to exam
           formats.
-        </h1>
+        </h2>
         <a
           href="/chat"
           className="p-4 bg-[#F1E596] hover:bg-[#ffe655] text-[#000000] text-2xl font-medium rounded-full transition-all duration-[0.3s]"
@@ -451,10 +451,10 @@ const Hero = () => {
       </section>
       <div ref={containerRef}>
         <section className="intro services-copy relative mt-[155svh] pt-[3vw] pr-[3vw] pb-[25svh] pl-[3vw] text-center bg-[#E2E8F0] rounded-t-[4vw] flex flex-col items-center gap-[2vw]">
-          <h1 className="animate-text heading font-[jost]">
+          <h2 className="animate-text heading font-[jost]">
             Generate concise notes, and create flashcards for quick revision,
             making studying more personalized, efficient, and engaging.
-          </h1>
+          </h2>
           <a
             href="/chat"
             className="p-4 bg-[#F1E596] hover:bg-[#ffe655] text-[#000000] text-2xl font-medium rounded-full transition-all duration-[0.3s]"
@@ -468,10 +468,10 @@ const Hero = () => {
           ))}
         </section>
         <section className="outro relative w-screen h-[100svh] overflow-hidden flex flex-col items-center justify-center p-[3vw] bg-[#000141b]">
-          <h1 className="text-[20vw] font-[600] leading-[1] text-center">
+          <h2 className="text-[20vw] font-[600] leading-[1] text-center">
             L<span className="text-[#ffe655]">e</span>arn
             <span className="text-[#ffe655]">ee</span>
-          </h1>
+          </h2>
           <AnimatedCopy>
             <p className="text-[2vw] w-[60%]">
               Learnee is an AI-powered exam assistant that helps students
@@ -487,18 +487,18 @@ const Hero = () => {
               <img
                 className="w-full h-full object-cover"
                 src="/chats.png"
-                alt=""
+                alt="A screenshot of the Learnee chat interface, showing a conversation with the Proff AI assistant."
               />
             </div>
           </div>
           <div className="header absolute w-full h-full flex justify-center items-center will-change-transform ">
             <div className="header-content w-[60%] flex flex-col items-center text-center gap-[3vw] will-change-transform will-change-opacity translate-y-[-100px] opacity-0 mb-[2vw]">
-              <h1 className="text-[5vw] font-[600] leading-[1] text-center">
+              <h2 className="text-[5vw] font-[600] leading-[1] text-center">
                 Find the answers with{" "}
                 <span className="text-[#ffe655]">Proff</span>
                 <span>'</span>
                 <span className="text-[#ffe655]">s</span> assistance
-              </h1>
+              </h2>
               <p>
                 Seek the answers you couldn't find — structures the ones you
                 already know.
@@ -556,11 +556,11 @@ const Hero = () => {
 
         <footer className="outro relative overflow-hidden flex rounded-t-4xl bg-[#E2E8F0]">
           <div className="w-[30vw] h-[30vw] bg-[url('/bee.svg')] bg-no-repeat bg-contain bg-center"></div>
-          <h1 className="text-[15vw] text-[#00141b] font-[600] leading-[1]">
+          <h2 className="text-[15vw] text-[#00141b] font-[600] leading-[1]">
             L<span className="text-[#ffe655]">e</span>arn
             <span className="text-[#ffe655]">ee</span>
-          </h1>
-          <h1 className="text-[#00141b] lowercase">space</h1>
+          </h2>
+          <h2 className="text-[#00141b] lowercase">space</h2>
         </footer>
       </div>
     </div>

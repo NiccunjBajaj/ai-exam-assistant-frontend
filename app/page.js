@@ -1,24 +1,36 @@
-"use client";
+import HomePageClient from "./components/HomePageClient";
 
-import { useEffect } from "react";
-import ReactLenis from "lenis/react";
-import Hero from "./components/Hero";
-import AOS from "aos";
-import "aos/dist/aos.css";
+export const metadata = {
+  title: "Learnee – Learn Smarter, Not Harder | AI Study Assistant",
+  description:
+    "Chat with Proff, your AI exam assistant. Generate notes, flashcards, and mark-based answers instantly from uploaded files.",
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    url: "https://www.learnee.space/",
+    title: "Learnee – AI Toolbox for Students",
+    description:
+      "Learnee helps students prepare smarter by generating notes, flashcards, and structured answers from uploaded files.",
+    siteName: "Learnee",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Learnee – AI Toolbox for Students",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Learnee – Learn Smarter, Not Harder",
+    description:
+      "AI-powered study assistant that helps students create notes, flashcards, and exam-ready answers.",
+    images: ["/og-image.png"],
+  },
+};
 
 export default function Home() {
-  useEffect(() => {
-    AOS.init({
-      duration: 1500,
-      once: true,
-    });
-  }, []);
-
-  return (
-    <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
-      <main>
-        <Hero />
-      </main>
-    </ReactLenis>
-  );
+  return <HomePageClient />;
 }

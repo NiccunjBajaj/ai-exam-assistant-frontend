@@ -93,9 +93,9 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 px-4">
       <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-lg">
-        <h2 className="text-3xl font-bold text-center mb-6 text-black">
+        <h1 className="text-3xl font-bold text-center mb-6 text-black">
           Create an Account
-        </h2>
+        </h1>
 
         {error && (
           <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">
